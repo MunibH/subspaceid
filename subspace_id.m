@@ -10,11 +10,11 @@ meta.date = '2021-04-29';
 meta.probe = 1;
 
 % analysis meta data
-meta.tmin = -4; % (s)relative to go cue
-meta.tmax = 4;  % (s) relative to go cue
+meta.tmin = -2.2; % (s) relative to go cue
+meta.tmax = 3;  % (s) relative to go cue
 meta.dt = 0.005;
 meta.smooth = 200;
-meta.prepEpoch = [-1.15, -0.15]; % (s) relative to go cue
+meta.prepEpoch = [-2.2, -0.15]; % (s) relative to go cue
 meta.moveEpoch = [0.15, 1.15]; % (s) relative to go cue
 
 % conditions (i.e. trials to look at)
@@ -27,7 +27,7 @@ meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no st
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
 
 %% SET RUN PARAMS
-params.formatPSTH          = true;
+params.formatPSTH          = false;
 params.method.optimization = false; % elsayed method
 params.method.regression   = false; % kaufman method
 params.method.maxdiff      = true; % new method mike and chand came up with
@@ -47,7 +47,9 @@ end
 methods = fieldnames(params.method);
 for i = 1:numel(methods)
     if params.method.(methods{i})
+        tic
         subspaceIDWithMethod(meta, obj, methods{i}, params);
+        toc
     end
 end
 
@@ -73,8 +75,12 @@ strToFind = {'data_structure' , meta.anm, meta.date};
 
 dat = load(fullfile(meta.datapth, meta.datafn));
 obj = dat.obj;
+
+% use old meta 
 if isfield(dat,'meta')
-    meta = dat.meta;
+    newmeta = dat.meta;
+    meta.cluNum = newmeta.cluNum;
+    meta.trialNum = newmeta.trialNum;
 end
 
 end % loadRawDataObj
