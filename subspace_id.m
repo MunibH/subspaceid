@@ -1,4 +1,5 @@
 function subspace_id()
+clear,clc,close all
 
 addAllPaths();
 
@@ -88,9 +89,9 @@ end % loadRawDataObj
 function subspaceIDWithMethod(meta, obj, method, params)
 switch method
     case 'optimization'
-        doOptim(meta, obj, params)
+        subspaceid_optimization(meta, obj, params)
     case 'regression'
-        doRegress(meta, obj, params)
+        subspaceid_regression(meta, obj, params)
     case 'maxdiff'
         subspaceid_maxdiff(meta, obj, params)
 end
