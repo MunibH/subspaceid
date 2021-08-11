@@ -1,7 +1,12 @@
 function subspaceID()
 clear,clc,close all
 
-addAllPaths();
+if ispc
+    pth = 'C:\Code\subspace-id';
+elseif ismac
+    pth = '/Users/Munib/Documents/Economo-Lab/code/subspaceid';
+end
+addAllPaths(pth);
 
 %% TODO
 %  kaufman method (regression)
@@ -9,7 +14,7 @@ addAllPaths();
 
 %% SET METADATA
 % experiment meta data
-meta.datapth = 'C:\Code\subspace-id\data';
+meta.datapth = fullfile(pth,'data');
 meta.anm = 'JEB7';
 meta.date = '2021-04-29';
 meta.probe = 1;
@@ -64,12 +69,13 @@ end % subspaceID
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function addAllPaths()
-addpath(genpath('C:\Code\subspace-id\utils'))
-addpath(genpath('C:\Code\subspace-id\preprocess'))
-addpath(genpath('C:\Code\subspace-id\optimization'))
-addpath(genpath('C:\Code\subspace-id\regression'))
-addpath(genpath('C:\Code\subspace-id\maxdiff_pca'))
+function addAllPaths(pth)
+addpath(genpath(fullfile(pth,'utils')))
+addpath(genpath(fullfile(pth,'preprocess')))
+addpath(genpath(fullfile(pth,'optimization')))
+addpath(genpath(fullfile(pth,'regression')))
+addpath(genpath(fullfile(pth,'maxdiff_pca')))
+
 end % addAllPaths
 
 function [obj, meta] = loadRawDataObj(meta)
