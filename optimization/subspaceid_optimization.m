@@ -30,10 +30,7 @@ rez.Qnull = Q*P2;
 
 cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
-
-dimsToPlot.potent = [1, 2];
-dimsToPlot.null = [1];
-plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', dimsToPlot);
+plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 
 end % subspaceid_optimization
 
