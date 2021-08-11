@@ -19,8 +19,8 @@ preppsth = [preppsth(:,:,1) ; preppsth(:,:,2)]; % (ct,n)
 [pcs,~,~,~,explained] = pca(preppsth);
 
 % find number of pcs to explain 95% of variance
-numPCs = numComponentsToExplainVariance(explained, 90);
-rez.Qnull = pcs(:,1:numPCs); 
+rez.dPrep = numComponentsToExplainVariance(explained, params.varToExplain);
+rez.Qnull = pcs(:,1:rez.dPrep); 
 
 %% PROJECT OUT PROMINENT NULL MODES
 modesToKeep = eye(size(pcs,1)) - (rez.Qnull*rez.Qnull');
@@ -36,14 +36,16 @@ moveproj = [moveproj(:,:,1) ; moveproj(:,:,2)]; % (ct,n)
 
 [pcs,~,~,~,explained] = pca(moveproj);
 % find number of pcs to explain 95% of variance
-numPCs = numComponentsToExplainVariance(explained, 90);
+rez.dMove = numComponentsToExplainVariance(explained, params.varToExplain);
 
-rez.Qpotent = pcs(:,1:numPCs);
+rez.Qpotent = pcs(:,1:rez.dMove);
 
 %% PLOTS
 cols = {[0,0,1],[1,0,0]};
-plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
-plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
+plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff PCA');
+% plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
+lbl = {'Potent 1', 'Potent 2', 'Null 1'};
+plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff PCA', params.dims, lbl);
 
 %% METHOD 2 ( for each cell, project onto each component, subtract from psth)
 

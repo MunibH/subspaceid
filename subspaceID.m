@@ -37,22 +37,26 @@ meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no st
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
 
 %% SET RUN PARAMS
-params.formatPSTH          = false;
-params.method.optimization = true; % elsayed method
+
+params.doPSTH              = false; % get psths by condition and save meta data from above
+
+params.method.optimization = false;  % elsayed method
 params.method.regression   = false; % kaufman method
-params.method.maxdiff      = false; % new method mike and chand came up with
+params.method.maxdiff      = true;  % new method mike and chand came up with
 
 params.conditions          = [1,2]; % which conditions to use in analysis (only 2 rn)
 
-% default dims to plot in 3D state space plot 
-params.dims.potent         = [1,2]; % which potent dims
-params.dims.null           = [1];   % which null dims to plot
+params.varToExplain        = 90;    % sets dimensionality of null and potent space
+
+% for 3D plot
+params.dims.potent         = [1,2]; % potent dims to plot by default
+params.dims.null           = [1];   % null dims to plot by default
 
 %% LOAD DATA
 [obj,meta] = loadRawDataObj(meta);
 
 %% FORMAT PSTHs
-if params.formatPSTH
+if params.doPSTH
     [obj, meta] = getPsthByCond(meta,obj);
     save(fullfile(meta.datapth, meta.datafn), 'obj', 'meta', '-v7.3');
 end

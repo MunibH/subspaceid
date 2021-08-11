@@ -14,12 +14,12 @@ rez = epochCovariance(obj.psth, prepix, moveix);
 %% OPTIMIZATION
 
 % find number of dims for move and prep epochs
-varToExplain = 90;
-rez = epochDimensionality(rez, obj.psth, prepix, moveix, varToExplain);
+rez = epochDimensionality(rez, obj.psth, prepix, moveix, params.varToExplain);
 
 % main optimization step
 rez.alpha = 0; % regularization hyperparam (+ve->discourage sparity, -ve->encourage sparsity)
-[Q, ~, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove,rez.Cprep,rez.dPrep,rez.alpha);
+[Q, ~, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
+                                    rez.Cprep,rez.dPrep,rez.alpha);
 P1 = [eye(rez.dMove); zeros(rez.dPrep,rez.dMove)];
 P2 = [zeros(rez.dMove, rez.dPrep); eye(rez.dPrep)];
 
@@ -30,7 +30,9 @@ rez.Qnull = Q*P2;
 
 cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
-plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
+% plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
+lbl = {'Potent 1', 'Potent 2', 'Null 1'};
+plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Optimization', params.dims, lbl);
 
 end % subspaceid_optimization
 

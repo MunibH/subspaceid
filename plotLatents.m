@@ -1,36 +1,50 @@
 function plotLatents(time, psth, rez, meta, cols, methodName)
 
 % Prep Dims
-figure;
-for i = 1:size(rez.Qnull,2)
-    subplot(size(rez.Qnull,2),1,i)
-    xlim([meta.tmin, meta.tmax]);
-    hold on
-    for j = 1:size(psth,3)
-        proj = psth(:,:,j) * rez.Qnull(:,i);
-        plot(time, proj, 'Color', cols{j});
-    end
-    hold off
-end
-sgtitle(['Null Dimensions - ' methodName])
-xlabel('Time from go cue (s)')
+ylims = [-3,3];
+plotSubspaceLatents(time, psth, rez.Qnull, meta, cols, ylims, methodName, 'Null')
 
 % Move Dims
-figure;
-for i = 1:size(rez.Qpotent,2)
-    subplot(size(rez.Qpotent,2),1,i)
+ylims = [-3,3];
+plotSubspaceLatents(time, psth, rez.Qpotent, meta, cols, ylims, methodName, 'Potent')
+
+
+end % plotLatents
+
+%%
+
+function plotSubspaceLatents(time, psth, mode, meta, cols, ylims, methodName, subspace)
+
+f = figure;
+set(gcf, 'Position', [290   127   932   671])
+for i = 1:size(mode,2)
+    nexttile
+    title(['Dim ' num2str(i)]);
     xlim([meta.tmin, meta.tmax]);
+    ylim(ylims);
     hold on
     for j = 1:size(psth,3)
-        proj = psth(:,:,j) * rez.Qpotent(:,i);
-        plot(time, proj, 'Color', cols{j});
+        proj = psth(:,:,j) * mode(:,i);
+        plot(time, proj, 'Color', cols{j}, ...
+            'LineWidth', 2.5);
     end
     hold off
 end
-sgtitle(['Potent Dimensions - ' methodName])
-xlabel('Time from go cue (s)')
+sgtitle([subspace ' Dimensions - ' methodName])
+h = axes(f, 'Visible', 'off');
+h.XLabel.Visible='on';
+h.YLabel.Visible='on';
+xlabel('Time from go cue (s)', 'FontSize', 20)
+ylabel(h,'Activity (a.u.)', 'FontSize', 20);
 
-end % plotLatents
+end % plotSubspaceLatents
+
+
+
+
+
+
+
 
 
 
