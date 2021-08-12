@@ -1,4 +1,4 @@
-function plotStateSpace(h, time, psth, rez, cols, methodName, dims, lbl)
+function plotStateSpace(time, psth, rez, cols, methodName, dims, lbl, cond)
 
 % can only plot in 3D
 assert((numel(dims.potent) + numel(dims.null)) == 3, 'Plot 3 dimensions!')
@@ -29,12 +29,20 @@ for i = 1:numel(fn)
 end
 
 % plot
+smth = 100;
 [~,gocueidx] = min(abs(time-0));
 for i = 1:size(dat.toPlot,3)
-    p(i) = plot3(dat.toPlot(:,1,i), dat.toPlot(:,2,i),...
-             dat.toPlot(:,3,i), 'LineWidth', 2); hold on
+    p(i) = plot3(mySmooth(dat.toPlot(:,1,i),smth), ...
+                 mySmooth(dat.toPlot(:,2,i),smth), ...
+                 mySmooth(dat.toPlot(:,3,i),smth), ... 
+                 'LineWidth', 2, ...
+                 'DisplayName', cond{i});
+         
+    hold on
+    
     plot3(dat.toPlot(gocueidx,1,i), dat.toPlot(gocueidx,2,i),...
-             dat.toPlot(gocueidx,3,i), '.', 'Color', cols{i}, 'MarkerSize',50);
+             dat.toPlot(gocueidx,3,i), '.', 'Color', cols{i}, ...
+             'DisplayName', 'Go Cue', 'MarkerSize',50);
 end
 hold off
 grid on
@@ -42,9 +50,11 @@ xlabel(lbl{1}, 'FontSize', 30)
 ylabel(lbl{2}, 'FontSize', 30)
 zlabel(lbl{3}, 'FontSize', 30)
 title(methodName, 'FontSize', 30);
+legend('Location', 'bestoutside','Units','normalized', ...
+       'Position', [0.703716285422975,0.804930894683553,0.262596892871598,0.092543273092745])
 
 % create gradient color trajectories
-stretch = 1.5;
+stretch = 1;
 righttrajcol = [uint8(winter(size(psth,1)*stretch)*255) , ...
                 uint8(ones(size(psth,1)*stretch,1))].';
 lefttrajcol = [uint8(hot(size(psth,1)*stretch)*255) , ...
