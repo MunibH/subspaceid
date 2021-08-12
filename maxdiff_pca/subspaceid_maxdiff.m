@@ -45,7 +45,8 @@ cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff PCA');
 % plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
-plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff PCA', params.dims, lbl);
+cond = {meta.condition{params.conditions}};
+plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff PCA', params.dims, lbl, cond);
 
 %% METHOD 2 ( for each cell, project onto each component, subtract from psth)
 

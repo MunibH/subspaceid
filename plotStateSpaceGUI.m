@@ -1,4 +1,4 @@
-function plotStateSpaceGUI(time, psth, rez, cols, methodName, dims, lbl)
+function plotStateSpaceGUI(time, psth, rez, cols, methodName, dims, lbl, cond)
 
 %% SETUP GUI
 bcol = [1 1 1];
@@ -14,14 +14,14 @@ h.ax = axes;
 set(h.ax, 'Position', [0.0835 0.0974 0.6551 0.8307]); 
 
 % initial plot
-plotStateSpace(h, time, psth, rez, cols, methodName, dims, lbl);
+plotStateSpace(time, psth, rez, cols, methodName, dims, lbl, cond);
 
 
 % axis menus
 menuString = createMenuString(rez);
 textString = {'X: ', 'Y: ', 'Z: '};
 for i = 1:3
-    uicontrol('Parent',h.fig(1), 'Style','text','String', textString{i}, 'Position',[838 600-75*i 15 25], 'Fontsize', 15, ...
+    uicontrol('Parent',h.fig(1), 'Style','text','String', textString{i}, 'Position',[820 600-75*i 30 25], 'Fontsize', 15, ...
         'BackgroundColor', bcol)
     h.axismenu(i) = uicontrol('Parent',h.fig(1), 'Style', 'popupmenu', 'Units', 'pixels', 'Position', ...
         [850 600-75*i 100 25], 'String', menuString, 'Value', i, 'BackgroundColor', bcol);
@@ -44,7 +44,7 @@ end
 % update plot button
 h.update = uicontrol('Parent',h.fig(1), 'Style', 'pushbutton', 'Position', [815 315 180 40], ...
     'String', 'Plot Dims','FontWeight','Bold', 'BackgroundColor', [0.3, 0.7, 0.5], ...
-    'Callback', {@updateDims,gcf,h,time,psth,rez,cols,methodName});
+    'Callback', {@updateDims,gcf,h,time,psth,rez,cols,methodName,cond});
 
 set(h.ax,'Color',[0 0 0 0.2])
 
@@ -67,7 +67,7 @@ end
 end % createMenuString
 
 
-function updateDims(~,~,fig,h,time,psth,rez,cols,methodName)
+function updateDims(~,~,fig,h,time,psth,rez,cols,methodName,cond)
 
 dims.potent = [];
 dims.null = [];
@@ -85,8 +85,9 @@ for i = 1:numel(h.axismenu)
     
 end
 
-plotStateSpace(h, time, psth, rez, cols, methodName, dims, dimString);
+plotStateSpace(time, psth, rez, cols, methodName, dims, dimString, cond);
 
+set(h.ax,'Color',[0 0 0 0.2])
 
 end % updateDims
 

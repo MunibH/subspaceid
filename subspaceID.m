@@ -9,8 +9,27 @@ end
 addAllPaths(pth);
 
 %% TODO
-%  kaufman method (regression)
 %  handle multiple probes of data
+%  handle more than 2 conditions
+%  kaufman method (regression)
+%  dpca
+%  psid
+
+%% SET RUN PARAMS
+
+params.doPSTH              = false; % get psths by condition and save meta data from above
+
+params.method.optimization = false;   % elsayed method
+params.method.maxdiff      = true;  % new method mike and chand came up with
+params.method.regression   = false;  % kaufman method
+
+params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
+
+params.varToExplain        = 90;    % sets dimensionality of null and potent space
+
+% for 3D plot
+params.dims.potent         = [1,2]; % potent dims to plot by default
+params.dims.null           = [1];   % null dims to plot by default
 
 %% SET METADATA
 % experiment meta data
@@ -23,7 +42,7 @@ meta.probe = 1;
 meta.tmin = -2.2; % (s) relative to go cue
 meta.tmax = 3;  % (s) relative to go cue
 meta.dt = 0.005;
-meta.smooth = 200;
+meta.smooth = 200; % for params.doPSTH
 meta.prepEpoch = [-2.2, -0.15]; % (s) relative to go cue
 meta.moveEpoch = [0.15, 1.15]; % (s) relative to go cue
 
@@ -32,6 +51,8 @@ meta.condition(1) = {'R&hit&~stim.enable&autowater.nums==2'}; % right hits, no s
 meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
 meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
 meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
+meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
+meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
 
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
@@ -41,8 +62,8 @@ meta.quality = {'Fair','Good','Great','Excellent','single','multi'};
 params.doPSTH              = false; % get psths by condition and save meta data from above
 
 params.method.optimization = true;  % elsayed method
-params.method.regression   = false; % kaufman method
 params.method.maxdiff      = false;  % new method mike and chand came up with
+params.method.regression   = false; % kaufman method
 
 params.conditions          = [1,2]; % which conditions to use in analysis (only 2 rn)
 
@@ -52,8 +73,9 @@ params.varToExplain        = 90;    % sets dimensionality of null and potent spa
 params.dims.potent         = [1,2]; % potent dims to plot by default
 params.dims.null           = [1];   % null dims to plot by default
 
+
 %% LOAD DATA
-[obj,meta] = loadRawDataObj(meta);
+[obj,meta] = loadDataObj(meta);
 
 %% FORMAT PSTHs
 if params.doPSTH
@@ -82,7 +104,7 @@ addpath(genpath(fullfile(pth,'maxdiff_pca')))
 
 end % addAllPaths
 
-function [obj, meta] = loadRawDataObj(meta)
+function [obj, meta] = loadDataObj(meta)
 contents = dir(meta.datapth);
 contents = {contents.name}';
 

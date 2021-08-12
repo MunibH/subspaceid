@@ -18,7 +18,7 @@ function plotSubspaceLatents(time, psth, mode, meta, cols, ylims, methodName, su
 f = figure;
 set(gcf, 'Position', [290   127   932   671])
 for i = 1:size(mode,2)
-    nexttile
+    h(i) = subplot(ceil(size(mode,2)/2),2,i);
     title(['Dim ' num2str(i)]);
     xlim([meta.tmin, meta.tmax]);
     ylim(ylims);
