@@ -40,9 +40,9 @@ meta.quality = {'Fair','Good','Great','Excellent','single','multi'};
 
 params.doPSTH              = false; % get psths by condition and save meta data from above
 
-params.method.optimization = false;  % elsayed method
+params.method.optimization = true;  % elsayed method
 params.method.regression   = false; % kaufman method
-params.method.maxdiff      = true;  % new method mike and chand came up with
+params.method.maxdiff      = false;  % new method mike and chand came up with
 
 params.conditions          = [1,2]; % which conditions to use in analysis (only 2 rn)
 

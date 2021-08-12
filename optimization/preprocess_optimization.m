@@ -26,7 +26,7 @@ function mcpsth = meancenter(psth)
 for clu = 1:size(psth,2)
     % find mean at each time point for each condition (time,1)
     mean_across_cond = mean(psth(:,clu,:),3);
-    psth(:,clu,:) = psth(:,clu,:) - repmat(mean_across_cond,[1,1,2]);
+    psth(:,clu,:) = psth(:,clu,:) - repmat(mean_across_cond,[1,1,size(psth,3)]);
 end
 mcpsth = psth;
 
