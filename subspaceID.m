@@ -57,6 +57,22 @@ meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, a
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
 
+%% SET RUN PARAMS
+
+params.doPSTH              = false; % get psths by condition and save meta data from above
+
+params.method.optimization = true;  % elsayed method
+params.method.maxdiff      = false;  % new method mike and chand came up with
+params.method.regression   = false; % kaufman method
+
+params.conditions          = [1,2]; % which conditions to use in analysis (only 2 rn)
+
+params.varToExplain        = 90;    % sets dimensionality of null and potent space
+
+% for 3D plot
+params.dims.potent         = [1,2]; % potent dims to plot by default
+params.dims.null           = [1];   % null dims to plot by default
+
 
 %% LOAD DATA
 [obj,meta] = loadDataObj(meta);
