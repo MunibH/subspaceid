@@ -1,26 +1,31 @@
-function subspaceid_maxdiff(meta, obj, params)
+function rez = subspaceid_maxdiff(meta, obj, params)
 
 %% PREPROCESS
 obj.psth = obj.psth(:,:,params.conditions);
+rez.time = obj.time;
+rez.psth = obj.psth;
+rez.condition = meta.condition(params.conditions);
+
 [obj, meta] = preprocess_maxdiff(meta, obj);
 
 %% PREP and MOVE EPOCHS
 % prepix and moveix corresponds to time idx for each epoch
-[prepix, moveix] = getEpochs(obj.time, meta.prepEpoch, meta.moveEpoch);
+[rez.prepix, rez.moveix] = getEpochs(obj.time, meta.prepEpoch, meta.moveEpoch);
 
 %% METHOD 1 ( N*(I-WW') )
 
 %% FIND NULL MODES
 psth = obj.psth;
 
-preppsth = psth(prepix,:,:);
+preppsth = psth(rez.prepix,:,:);
 preppsth = [preppsth(:,:,1) ; preppsth(:,:,2)]; % (ct,n)
 
 [pcs,~,~,~,explained] = pca(preppsth);
 
 % find number of pcs to explain 95% of variance
 rez.dPrep = numComponentsToExplainVariance(explained, params.varToExplain);
-rez.Qnull = pcs(:,1:rez.dPrep); 
+rez.Qnull = pcs(:,1:rez.dPrep);
+rez.Qnull_ve = explained(1:rez.dPrep);
 
 %% PROJECT OUT PROMINENT NULL MODES
 modesToKeep = eye(size(pcs,1)) - (rez.Qnull*rez.Qnull');
@@ -31,7 +36,8 @@ for i = 1:size(psth,3)
 end
 
 %% FIND POTENT MODES AS PCs OF MOVE EPOCH
-moveproj = proj(moveix,:,:);
+% moveproj = proj(rez.moveix,:,:); % only use move epoch for potent mode ID
+moveproj = proj; % use all leftover data for potent mode ID (seems more right)
 moveproj = [moveproj(:,:,1) ; moveproj(:,:,2)]; % (ct,n)
 
 [pcs,~,~,~,explained] = pca(moveproj);
@@ -39,6 +45,7 @@ moveproj = [moveproj(:,:,1) ; moveproj(:,:,2)]; % (ct,n)
 rez.dMove = numComponentsToExplainVariance(explained, params.varToExplain);
 
 rez.Qpotent = pcs(:,1:rez.dMove);
+rez.Qpotent_ve = explained(1:rez.dMove);
 
 %% PLOTS
 cols = {[0,0,1],[1,0,0]};

@@ -19,7 +19,7 @@ addAllPaths(pth);
 
 params.doPSTH              = false; % get psths by condition and save meta data from above
 
-params.method.optimization = false;   % elsayed method
+params.method.optimization = true;   % elsayed method
 params.method.maxdiff      = true;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
 
@@ -87,10 +87,10 @@ end
 methods = fieldnames(params.method);
 for i = 1:numel(methods)
     if params.method.(methods{i})
-        subspaceIDWithMethod(meta, obj, methods{i}, params);
+        rez{i} = subspaceIDWithMethod(meta, obj, methods{i}, params);
+        rez{i}.method = methods{i};
     end
 end
-
 end % subspaceID
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -124,14 +124,14 @@ end
 
 end % loadRawDataObj
 
-function subspaceIDWithMethod(meta, obj, method, params)
+function rez = subspaceIDWithMethod(meta, obj, method, params)
 switch method
     case 'optimization'
-        subspaceid_optimization(meta, obj, params)
+        rez = subspaceid_optimization(meta, obj, params);
     case 'regression'
-        subspaceid_regression(meta, obj, params)
+        rez = subspaceid_regression(meta, obj, params);
     case 'maxdiff'
-        subspaceid_maxdiff(meta, obj, params)
+       rez =  subspaceid_maxdiff(meta, obj, params);
 end
 end % subspaceIDWithMethod
 
