@@ -1,20 +1,24 @@
-function subspaceid_optimization(meta, obj, params)
+function rez = subspaceid_optimization(meta, obj, params)
 
 %% PREPROCESS
 obj.psth = obj.psth(:,:,params.conditions);
+rez.time = obj.time;
+rez.psth = obj.psth;
+rez.condition = meta.condition(params.conditions);
+
 [obj, meta] = preprocess_optimization(meta, obj);
 
 %% PREP and MOVE EPOCHS
 % prepix and moveix corresponds to time idx for each epoch
-[prepix, moveix] = getEpochs(obj.time, meta.prepEpoch, meta.moveEpoch);
+[rez.prepix, rez.moveix] = getEpochs(obj.time, meta.prepEpoch, meta.moveEpoch);
 
 %% GET COVARIANCE MATRICES of EPOCHS
-rez = epochCovariance(obj.psth, prepix, moveix);
+rez = epochCovariance(obj.psth, rez);
 
 %% OPTIMIZATION
 
 % find number of dims for move and prep epochs
-rez = epochDimensionality(rez, obj.psth, prepix, moveix, params.varToExplain);
+rez = epochDimensionality(rez, obj.psth, rez.prepix, rez.moveix, params.varToExplain);
 
 % main optimization step
 rez.alpha = 0; % regularization hyperparam (+ve->discourage sparity, -ve->encourage sparsity)
@@ -25,6 +29,9 @@ P2 = [zeros(rez.dMove, rez.dPrep); eye(rez.dPrep)];
 
 rez.Qpotent = Q*P1;
 rez.Qnull = Q*P2;
+
+rez.Qpotent_ve = ones(rez.dMove,1);
+rez.Qnull_ve   = ones(rez.dPrep,1);
 
 %% PLOTS
 
@@ -49,9 +56,9 @@ for i = 2:size(psth,3)
 end
 end % epochPSTH
 
-function rez = epochCovariance(psth, prepix, moveix)
+function rez = epochCovariance(psth, rez)
 % computes covariance of each epoch
-[psthprep, psthmove] = epochPSTH(psth, prepix, moveix);
+[psthprep, psthmove] = epochPSTH(psth, rez.prepix, rez.moveix);
 rez.Cprep = cov(psthprep);
 rez.Cmove = cov(psthmove);
 end % epochCovariance
