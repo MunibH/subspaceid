@@ -1,4 +1,6 @@
-function plotStateSpace(time, psth, rez, cols, methodName, dims, lbl, cond)
+function plotStateSpace(fig, time, psth, rez, cols, methodName, dims, lbl, cond)
+
+h = guidata(fig);
 
 % can only plot in 3D
 assert((numel(dims.potent) + numel(dims.null)) == 3, 'Plot 3 dimensions!')
@@ -7,6 +9,7 @@ assert((numel(dims.potent) + numel(dims.null)) == 3, 'Plot 3 dimensions!')
 null_latent = nan(numel(time), size(rez.Qnull,2), size(psth,3));
 potent_latent = nan(numel(time), size(rez.Qpotent,2), size(psth,3));
 for i = 1:size(psth,3)
+    % (time,dims,numconds)
     null_latent(:,:,i) = psth(:,:,i) * rez.Qnull; 
     potent_latent(:,:,i) = psth(:,:,i) * rez.Qpotent; 
 end
@@ -29,7 +32,7 @@ for i = 1:numel(fn)
 end
 
 % plot
-smth = 100;
+smth = str2double(h.smooth.String);
 [~,gocueidx] = min(abs(time-0));
 for i = 1:size(dat.toPlot,3)
     p(i) = plot3(mySmooth(dat.toPlot(:,1,i),smth), ...
@@ -54,7 +57,7 @@ legend('Location', 'bestoutside','Units','normalized', ...
        'Position', [0.703716285422975,0.804930894683553,0.262596892871598,0.092543273092745])
 
 % create gradient color trajectories
-stretch = 1;
+stretch = str2double(h.colstretch.String);
 righttrajcol = [uint8(winter(size(psth,1)*stretch)*255) , ...
                 uint8(ones(size(psth,1)*stretch,1))].';
 lefttrajcol = [uint8(hot(size(psth,1)*stretch)*255) , ...

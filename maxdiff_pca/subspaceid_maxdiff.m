@@ -4,6 +4,7 @@ function rez = subspaceid_maxdiff(meta, obj, params)
 obj.psth = obj.psth(:,:,params.conditions);
 rez.time = obj.time;
 rez.psth = obj.psth;
+rez.trialpsth = obj.trialpsth;
 rez.condition = meta.condition(params.conditions);
 
 [obj, meta] = preprocess_maxdiff(meta, obj);
@@ -20,7 +21,8 @@ psth = obj.psth;
 preppsth = psth(rez.prepix,:,:);
 preppsth = [preppsth(:,:,1) ; preppsth(:,:,2)]; % (ct,n)
 
-[pcs,~,~,~,explained] = pca(preppsth);
+% pca
+[pcs,explained] = myPCA(preppsth);
 
 % find number of pcs to explain 95% of variance
 rez.dPrep = numComponentsToExplainVariance(explained, params.varToExplain);
@@ -40,20 +42,23 @@ end
 moveproj = proj; % use all leftover data for potent mode ID (seems more right)
 moveproj = [moveproj(:,:,1) ; moveproj(:,:,2)]; % (ct,n)
 
-[pcs,~,~,~,explained] = pca(moveproj);
+% pca
+[pcs,explained] = myPCA(moveproj);
+
 % find number of pcs to explain 95% of variance
 rez.dMove = numComponentsToExplainVariance(explained, params.varToExplain);
-
 rez.Qpotent = pcs(:,1:rez.dMove);
 rez.Qpotent_ve = explained(1:rez.dMove);
 
 %% PLOTS
 cols = {[0,0,1],[1,0,0]};
-plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff PCA');
+plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff');
 % plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
-cond = {meta.condition{params.conditions}};
-plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff PCA', params.dims, lbl, cond);
+condLbl = {meta.condition{params.conditions}};
+plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff', params.dims, lbl, condLbl);
+cond = params.conditions;
+plotSingleTrialsGUI(obj.time,obj.trialpsth,rez,cols,'Maxdiff', params.dims,lbl,condLbl, meta.trialNum,cond);
 
 %% METHOD 2 ( for each cell, project onto each component, subtract from psth)
 

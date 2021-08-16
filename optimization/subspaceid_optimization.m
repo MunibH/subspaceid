@@ -4,6 +4,7 @@ function rez = subspaceid_optimization(meta, obj, params)
 obj.psth = obj.psth(:,:,params.conditions);
 rez.time = obj.time;
 rez.psth = obj.psth;
+rez.trialpsth = obj.trialpsth;
 rez.condition = meta.condition(params.conditions);
 
 [obj, meta] = preprocess_optimization(meta, obj);
@@ -22,13 +23,14 @@ rez = epochDimensionality(rez, obj.psth, rez.prepix, rez.moveix, params.varToExp
 
 % main optimization step
 rez.alpha = 0; % regularization hyperparam (+ve->discourage sparity, -ve->encourage sparsity)
-[Q, ~, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
+[Q,~,P,~,~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
                                     rez.Cprep,rez.dPrep,rez.alpha);
-P1 = [eye(rez.dMove); zeros(rez.dPrep,rez.dMove)];
-P2 = [zeros(rez.dMove, rez.dPrep); eye(rez.dPrep)];
+                                
+% P1 = [eye(rez.dMove); zeros(rez.dPrep,rez.dMove)];
+% P2 = [zeros(rez.dMove, rez.dPrep); eye(rez.dPrep)];
 
-rez.Qpotent = Q*P1;
-rez.Qnull = Q*P2;
+rez.Qpotent = Q*P{1};
+rez.Qnull = Q*P{2};
 
 rez.Qpotent_ve = ones(rez.dMove,1);
 rez.Qnull_ve   = ones(rez.dPrep,1);
@@ -39,8 +41,10 @@ cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
 % plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
-cond = {meta.condition{params.conditions}};
-plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Optimization', params.dims, lbl, cond);
+condLbl = {meta.condition{params.conditions}};
+plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Optimization', params.dims, lbl, condLbl);
+cond = params.conditions;
+plotSingleTrialsGUI(obj.time,obj.trialpsth,rez,cols,'Maxdiff', params.dims,lbl,condLbl,meta.trialNum,cond);
 
 end % subspaceid_optimization
 
@@ -66,10 +70,10 @@ end % epochCovariance
 function rez = epochDimensionality(rez, psth, prepix, moveix, varToExplain)
     [psthprep, psthmove] = epochPSTH(psth, prepix, moveix);
     
-    [~,~,~,~,explained] = pca(psthprep);
+    [~,explained] = myPCA(psthprep);
     rez.dPrep = numComponentsToExplainVariance(explained, varToExplain);
         
-    [~,~,~,~,explained] = pca(psthmove);
+    [~,explained] = myPCA(psthmove);
     rez.dMove = numComponentsToExplainVariance(explained, varToExplain);
     
     rez.dMax = max(rez.dMove,rez.dPrep);
