@@ -1,4 +1,3 @@
-function subspaceID()
 clear,clc,close all
 
 if ispc
@@ -9,21 +8,27 @@ end
 addAllPaths(pth);
 
 %% TODO
+%  fix bug in optimization when you change literally anything
+%  var explained - opt method
+%  move onset
 %  handle multiple probes of data
 %  handle more than 2 conditions
 %  kaufman method (regression)
 %  dpca
 %  psid
+%  gpfa for single trials
 
 %% SET RUN PARAMS
 
 params.doPSTH              = false; % get psths by condition and save meta data from above
+params.evName              = 'goCue';
+params.sav                 = 0;    % save obj with psths (just need to do this once)
 
 params.method.optimization = true;   % elsayed method
-params.method.maxdiff      = true;  % new method mike and chand came up with
+params.method.maxdiff      = false;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
 
-params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
+params.conditions          = [1 , 3]; % which conditions to use in analysis (only 2 rn)
 
 params.varToExplain        = 90;    % sets dimensionality of null and potent space
 
@@ -51,8 +56,8 @@ meta.condition(1) = {'R&hit&~stim.enable&autowater.nums==2'}; % right hits, no s
 meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
 meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
 meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
-meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
-meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+% meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
+% meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
 
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
@@ -77,21 +82,33 @@ params.dims.null           = [1];   % null dims to plot by default
 %% LOAD DATA
 [obj,meta] = loadDataObj(meta);
 
-%% FORMAT PSTHs
+%% get trials and clusters to use
+
+% get list of clusters
+cluQuality = {obj.clu{meta.probe}(:).quality}';
+meta.cluNum = findClusters(cluQuality, meta.quality);
+
+% get list of trials
+meta.trialNum = findTrials(obj, obj.condition);
+
+%% PSTHs
 if params.doPSTH
-    [obj, meta] = getPsthByCond(meta,obj);
-    save(fullfile(meta.datapth, meta.datafn), 'obj', 'meta', '-v7.3');
+    [obj, meta] = getPsthByCond(meta,obj,params);
+    if params.sav
+        save(fullfile(meta.datapth, meta.datafn), 'obj', '-v7.3');
+    end
 end
 
 %% ANALYSIS METHODS
 methods = fieldnames(params.method);
+ct = 1;
 for i = 1:numel(methods)
     if params.method.(methods{i})
-        rez{i} = subspaceIDWithMethod(meta, obj, methods{i}, params);
-        rez{i}.method = methods{i};
+        rez{ct} = subspaceIDWithMethod(meta, obj, methods{i}, params);
+        rez{ct}.method = methods{i};
+        ct = ct + 1;
     end
 end
-end % subspaceID
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -104,7 +121,7 @@ addpath(genpath(fullfile(pth,'maxdiff_pca')))
 
 end % addAllPaths
 
-function [obj, meta] = loadDataObj(meta)
+function [obj,meta] = loadDataObj(meta)
 contents = dir(meta.datapth);
 contents = {contents.name}';
 
@@ -115,13 +132,6 @@ strToFind = {'data_structure' , meta.anm, meta.date};
 dat = load(fullfile(meta.datapth, meta.datafn));
 obj = dat.obj;
 
-% use old meta 
-if isfield(dat,'meta')
-    newmeta = dat.meta;
-    meta.cluNum = newmeta.cluNum;
-    meta.trialNum = newmeta.trialNum;
-end
-
 end % loadRawDataObj
 
 function rez = subspaceIDWithMethod(meta, obj, method, params)
@@ -131,7 +141,7 @@ switch method
     case 'regression'
         rez = subspaceid_regression(meta, obj, params);
     case 'maxdiff'
-       rez =  subspaceid_maxdiff(meta, obj, params);
+        rez = subspaceid_maxdiff(meta, obj, params);
 end
 end % subspaceIDWithMethod
 

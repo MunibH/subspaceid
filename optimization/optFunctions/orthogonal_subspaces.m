@@ -29,8 +29,8 @@ function [Q, Qcost, P, info, options] = orthogonal_subspaces(C1, d1, C2, d2, alp
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% assert(isequal(C1, C1'));
-% assert(isequal(C2, C2'));
+assert(isequal(C1, C1'));
+assert(isequal(C2, C2'));
 assert(size(C1,1) == size(C2,1));
 n = size(C1,1);
 dmax = max(d1,d2);
