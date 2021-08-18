@@ -31,13 +31,20 @@ for i = 1:numel(fn)
     end
 end
 
-% plot
+% smooth
 smth = str2double(h.smooth.String);
+for i = 1:size(dat.toPlot,3)
+    for j = 1:size(dat.toPlot,2)
+        dat.toPlot(:,j,i) = mySmooth(dat.toPlot(:,j,i),smth);
+    end
+end
+
+% plot
 [~,gocueidx] = min(abs(time-0));
 for i = 1:size(dat.toPlot,3)
-    p(i) = plot3(mySmooth(dat.toPlot(:,1,i),smth), ...
-                 mySmooth(dat.toPlot(:,2,i),smth), ...
-                 mySmooth(dat.toPlot(:,3,i),smth), ... 
+    p(i) = plot3(dat.toPlot(:,1,i), ...
+                 dat.toPlot(:,2,i), ...
+                 dat.toPlot(:,3,i), ... 
                  'LineWidth', 2, ...
                  'DisplayName', cond{i});
          

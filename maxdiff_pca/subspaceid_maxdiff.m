@@ -22,12 +22,12 @@ preppsth = psth(rez.prepix,:,:);
 preppsth = [preppsth(:,:,1) ; preppsth(:,:,2)]; % (ct,n)
 
 % pca
-[pcs,explained] = myPCA(preppsth);
+[pcs,lambda,explained] = myPCA(preppsth);
 
 % find number of pcs to explain 95% of variance
 rez.dPrep = numComponentsToExplainVariance(explained, params.varToExplain);
 rez.Qnull = pcs(:,1:rez.dPrep);
-rez.Qnull_ve = explained(1:rez.dPrep);
+rez.Qnull_ve = explained(1:rez.dPrep); % var explained of prep epoch in null subspace
 
 %% PROJECT OUT PROMINENT NULL MODES
 modesToKeep = eye(size(pcs,1)) - (rez.Qnull*rez.Qnull');
@@ -43,11 +43,17 @@ moveproj = proj; % use all leftover data for potent mode ID (seems more right)
 moveproj = [moveproj(:,:,1) ; moveproj(:,:,2)]; % (ct,n)
 
 % pca
-[pcs,explained] = myPCA(moveproj);
+[pcs,lambda,explained] = myPCA(moveproj);
 
-% find number of pcs to explain 95% of variance
+% find number of pcs to explain 95% of variance of moveproj (not psth)
 rez.dMove = numComponentsToExplainVariance(explained, params.varToExplain);
 rez.Qpotent = pcs(:,1:rez.dMove);
+
+% variance explained of move epoch by potent space
+movepsth = psth(rez.moveix,:,:);
+movepsth = [movepsth(:,:,1) ; movepsth(:,:,2)]; % (ct,n)
+[~,lambdafull,~] = myPCA(movepsth);
+explained = (lambda / sum(lambdafull)) * 100;
 rez.Qpotent_ve = explained(1:rez.dMove);
 
 %% PLOTS
