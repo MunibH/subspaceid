@@ -18,13 +18,12 @@ rez = epochDimensionality(rez, obj.psth, prepix, moveix, params.varToExplain);
 
 % main optimization step
 rez.alpha = 0; % regularization hyperparam (+ve->discourage sparity, -ve->encourage sparsity)
-[Q, ~, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
+[Q, ~, P, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
                                     rez.Cprep,rez.dPrep,rez.alpha);
-P1 = [eye(rez.dMove); zeros(rez.dPrep,rez.dMove)];
-P2 = [zeros(rez.dMove, rez.dPrep); eye(rez.dPrep)];
 
-rez.Qpotent = Q*P1;
-rez.Qnull = Q*P2;
+
+rez.Qpotent = Q*P{1};
+rez.Qnull = Q*P{2};
 
 %% PLOTS
 
