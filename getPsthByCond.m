@@ -1,48 +1,46 @@
-function [obj,sidmeta] = getPsthByCond(sidmeta,obj,params)
+function [obj,meta] = getPsthByCond(meta,obj,params)
 
-obj.edges = sidmeta.tmin:sidmeta.dt:sidmeta.tmax;
-obj.time = obj.edges + sidmeta.dt/2;
+edges = meta.tmin:meta.dt:meta.tmax;
+obj.time = edges + meta.dt/2;
 obj.time = obj.time(1:end-1);
 
-obj.condition = sidmeta.condition';
-
-% ensure spikes are aligned to go cue
-for clu = 1:numel(obj.clu{sidmeta.probe})
-    event = obj.bp.ev.(params.evName)(obj.clu{sidmeta.probe}(clu).trial);
-    obj.clu{sidmeta.probe}(clu).trialtm_aligned = obj.clu{sidmeta.probe}(clu).trialtm - event;
+% align spikes to params.evName
+for clu = 1:numel(obj.clu{meta.probe})
+    event = obj.bp.ev.(params.evName)(obj.clu{meta.probe}(clu).trial);
+    obj.clu{meta.probe}(clu).trialtm_aligned = obj.clu{meta.probe}(clu).trialtm - event;
 end
 
 
 % get psths by condition
-obj.psth = zeros(numel(obj.time),numel(sidmeta.cluNum),numel(obj.condition));
-for i = 1:numel(sidmeta.cluNum)
+obj.psth = zeros(numel(obj.time),numel(meta.cluNum),numel(obj.condition));
+for i = 1:numel(meta.cluNum)
+    curClu = meta.cluNum(i);
     for j = 1:numel(obj.condition)
-        curClu = sidmeta.cluNum(i);
-        trix = sidmeta.trialNum{j};
-        spkix = ismember(obj.clu{sidmeta.probe}(curClu).trial, trix);
+        trix = meta.trialNum{j};
+        spkix = ismember(obj.clu{meta.probe}(curClu).trial, trix);
 
-        N = histc(obj.clu{sidmeta.probe}(curClu).trialtm_aligned(spkix), obj.edges);
+        N = histc(obj.clu{meta.probe}(curClu).trialtm_aligned(spkix), edges);
         N = N(1:end-1);
 
-        obj.psth(:,i,j) = mySmooth(N./numel(trix)./sidmeta.dt, sidmeta.smooth);  % trial-averaged separated by trial type
+        obj.psth(:,i,j) = mySmooth(N./numel(trix)./meta.dt, meta.smooth);  % trial-averaged separated by trial type
     end
 end
 
 % get single trial data
-obj.trialpsth = zeros(numel(obj.time),numel(sidmeta.cluNum),obj.bp.Ntrials);
-for i = 1:numel(sidmeta.cluNum)
+obj.trialpsth = zeros(numel(obj.time),numel(meta.cluNum),obj.bp.Ntrials);
+for i = 1:numel(meta.cluNum)
     for j = 1:obj.bp.Ntrials
-        curClu = sidmeta.cluNum(i);
+        curClu = meta.cluNum(i);
         trix = j;
-        spkix = ismember(obj.clu{sidmeta.probe}(curClu).trial, trix);
+        spkix = ismember(obj.clu{meta.probe}(curClu).trial, trix);
 
-        N = histc(obj.clu{sidmeta.probe}(curClu).trialtm_aligned(spkix), obj.edges);
+        N = histc(obj.clu{meta.probe}(curClu).trialtm_aligned(spkix), edges);
         N = N(1:end-1);
         if size(N,2) > size(N,1)
             N = N'; % make sure N is a column vector
         end
         
-        obj.trialpsth(:,i,j) = mySmooth(N./numel(trix)./sidmeta.dt, sidmeta.smooth);
+        obj.trialpsth(:,i,j) = mySmooth(N./numel(trix)./meta.dt, meta.smooth);
 
     end
 end
