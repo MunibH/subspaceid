@@ -23,6 +23,7 @@ addAllPaths(pth);
 %% SET RUN PARAMS
 
 params.doPSTH              = true; % get psths by condition and save meta data from above
+
 params.evName              = 'goCue'; % event to align data to
 params.sav                 = 0;    % save obj with psths (just need to do this once)
 
@@ -50,6 +51,11 @@ meta.probe = 1;
 meta.tmin = -2.2; % (s) relative to params.evName
 meta.tmax = 3;  % (s) relative to params.evName
 meta.dt = 0.005;
+
+meta.smooth = 200; % for params.doPSTH
+meta.prepEpoch = [-1.5, -0.15]; % (s) relative to go cue
+meta.moveEpoch = [0.15, 1.15]; % (s) relative to go cue
+
 meta.smooth = 100; % for params.doPSTH
 meta.prepEpoch = [-2.2, -0.15]; % (s) relative to params.evName
 meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
@@ -64,22 +70,6 @@ meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no st
 
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
-
-%% SET RUN PARAMS
-
-params.doPSTH              = false; % get psths by condition and save meta data from above
-
-params.method.optimization = true;  % elsayed method
-params.method.maxdiff      = false;  % new method mike and chand came up with
-params.method.regression   = false; % kaufman method
-
-params.conditions          = [1,2]; % which conditions to use in analysis (only 2 rn)
-
-params.varToExplain        = 90;    % sets dimensionality of null and potent space
-
-% for 3D plot
-params.dims.potent         = [1,2]; % potent dims to plot by default
-params.dims.null           = [1];   % null dims to plot by default
 
 
 %% LOAD DATA
@@ -102,6 +92,7 @@ if params.doPSTH
 %     if params.sav
 %         save(fullfile(meta.datapth, meta.datafn), 'obj', '-v7.3');
 %     end
+
 end
 
 %% ANALYSIS METHODS
@@ -114,6 +105,7 @@ for i = 1:numel(methods)
         ct = ct + 1;
     end
 end
+
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
