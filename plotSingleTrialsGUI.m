@@ -1,10 +1,10 @@
-function plotStateSpaceGUI(time, psth, rez, cols, methodName, dims, lbl, cond)
+function plotSingleTrialsGUI(time, psth, rez, cols, methodName, dims, lbl, condlbl, trials, condnum)
 
 %% SETUP GUI
 bcol = [1 1 1];
 
 % Main Figure
-h.fig(1) = figure(1000);  hold on
+h.fig(1) = figure(2000);  hold on
 
 set(h.fig(1), 'Units', 'Pixels', 'Position', [828 379 1032 751], 'Color', bcol);
 
@@ -37,7 +37,7 @@ uicontrol('Parent',h.fig(1), 'Style','text','String', 'Smooth: ', 'Position',[82
         'BackgroundColor', bcol)
 h.smooth = uicontrol('Parent',h.fig(1), 'Style', 'edit', 'Position', [920 250 50 25], ...
     'String', '0', 'BackgroundColor', bcol, ...
-    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,cond});
+    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,condlbl,trials,condnum});
 h.smooth.String = '100';
 
 % color stretching
@@ -45,12 +45,12 @@ uicontrol('Parent',h.fig(1), 'Style','text','String', 'ColStretch: ', 'Position'
         'BackgroundColor', bcol)
 h.colstretch = uicontrol('Parent',h.fig(1), 'Style', 'edit', 'Position', [920 200 50 25], ...
     'String', '1', 'BackgroundColor', bcol, ...
-    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,cond});
+    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,condlbl,trials,condnum});
 
 % update plot button
 h.update = uicontrol('Parent',h.fig(1), 'Style', 'pushbutton', 'Position', [815 315 180 40], ...
     'String', 'Plot Dims','FontWeight','Bold', 'BackgroundColor', [0.3, 0.7, 0.5], ...
-    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,cond});
+    'Callback', {@updateDims,gcf,time,psth,rez,cols,methodName,condlbl,trials,condnum});
 
 % axes
 set(gca,'Visible','off')
@@ -60,7 +60,7 @@ set(h.ax, 'Position', [0.0835 0.0974 0.6551 0.8307]);
 guidata(h.fig(1),h)
 
 % initial plot
-plotStateSpace(h.fig(1), time, psth, rez, cols, methodName, dims, lbl, cond);
+plotSingleTrials(h.fig(1), time, psth, rez, cols, methodName, dims, lbl, condlbl, trials, condnum);
 
 
 set(h.ax,'Color',[0 0 0 0.2])
@@ -84,7 +84,7 @@ end
 end % createMenuString
 
 
-function updateDims(~,~,fig,time,psth,rez,cols,methodName,cond)
+function updateDims(~,~,fig,time,psth,rez,cols,methodName,condlbl,condnum,trials)
 
 h = guidata(fig);
 
@@ -104,7 +104,7 @@ for i = 1:numel(h.axismenu)
     
 end
 
-plotStateSpace(fig, time, psth, rez, cols, methodName, dims, dimString, cond);
+plotSingleTrials(fig, time, psth, rez, cols, methodName, dims, dimString, condlbl,condnum,trials);
 
 set(h.ax,'Color',[0 0 0 0.2])
 
