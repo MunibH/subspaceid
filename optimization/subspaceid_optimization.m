@@ -24,14 +24,6 @@ rez = epochDimensionality(rez, obj.psth, rez.prepix, rez.moveix, params.varToExp
 
 % main optimization step
 rez.alpha = 0; % regularization hyperparam (+ve->discourage sparity, -ve->encourage sparsity)
-<<<<<<< HEAD
-[Q, ~, P, ~, ~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
-                                    rez.Cprep,rez.dPrep,rez.alpha);
-
-
-rez.Qpotent = Q*P{1};
-rez.Qnull = Q*P{2};
-=======
 [Q,~,P,~,~] = orthogonal_subspaces(rez.Cmove,rez.dMove, ... 
                                     rez.Cprep,rez.dPrep,rez.alpha);
                                 
@@ -40,13 +32,11 @@ rez.Qpotent = Q*P{1};
 rez.Qnull = Q*P{2};
 
 rez = getVarianceExplained(rez);
->>>>>>> 30d90e8cafd912e6aab3dde8ab551e62a52b2069
 
 %% PLOTS
 
 cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
-% plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
 condLbl = {meta.condition{params.conditions}};
 plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Optimization', params.dims, lbl, condLbl);

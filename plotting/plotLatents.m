@@ -3,7 +3,7 @@ function plotLatents(time, psth, rez, meta, cols, methodName)
 if strcmpi(methodName,'optimization')
     ylims = [-1,1];
 elseif strcmpi(methodName,'maxdiff')
-    ylims = [-3,3];
+    ylims = [-2.2,2.2];
 end
 
 % Prep Dims

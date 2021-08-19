@@ -1,6 +1,6 @@
 function out = mySmooth(x, N)
 % operates on first dimension only
-% kern = gausswin(N)
+% gaussian kernel with window size N
 
     if N==1
         out = x;

@@ -4,9 +4,13 @@ edges = meta.tmin:meta.dt:meta.tmax;
 obj.time = edges + meta.dt/2;
 obj.time = obj.time(1:end-1);
 
-% align spikes to params.evName
+if strcmpi(params.alignEvent,'moveOnset')
+    obj = findMoveOnset(obj); % assigns obj.bp.ev.moveOnset
+end
+
+% align spikes to params.alignEvent
 for clu = 1:numel(obj.clu{meta.probe})
-    event = obj.bp.ev.(params.evName)(obj.clu{meta.probe}(clu).trial);
+    event = obj.bp.ev.(params.alignEvent)(obj.clu{meta.probe}(clu).trial);
     obj.clu{meta.probe}(clu).trialtm_aligned = obj.clu{meta.probe}(clu).trialtm - event;
 end
 

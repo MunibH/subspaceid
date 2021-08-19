@@ -1,4 +1,4 @@
-function mov = getMoveIdx(obj)
+function [movIdx,movTime] = getMoveIdx(obj)
 % returns cell array mov where each entry is an (Nframesx1) logical vector
 % labeling where in a trial the animal is moving
 
@@ -17,7 +17,8 @@ sm = 7; % smoothing window
 
 
 vid = obj.traj{view};
-mov = cell(obj.bp.Ntrials,1);
+movIdx = cell(obj.bp.Ntrials,1);
+movTime = movIdx;
 for j = 1:obj.bp.Ntrials
     %% get tongue trajectory
     
@@ -44,7 +45,7 @@ for j = 1:obj.bp.Ntrials
     dat = zeros(Nframes, 2);
     dat(:,1) = (1:Nframes)./(1/dt); % time
     dat(:,2) = mySmooth(vid(j).ts(:,1,jawfeat), sm); % x
-    dat(:,3) = mySmooth(vid(j).ts(:,2,jawfeat), sm); % y
+    dat(:,3) = mySmooth(vid(j).ts(:,2,jawfeat), sm); % z
     dat(p<0.9,[2,3]) = NaN;
     
     %% fill nans
@@ -101,8 +102,8 @@ for j = 1:obj.bp.Ntrials
     
     %% get mov
     
-    mov{j} = tongmov | jawspeedmov | jawzmov;
-
+    movIdx{j} = tongmov | jawspeedmov | jawzmov;
+    movTime{j} = dat(movIdx{j},1);
     
     %% plot
 %     close all
@@ -120,14 +121,15 @@ for j = 1:obj.bp.Ntrials
 %     yline(jawzthresh,'r');
 %     ylabel('variance in jaw z pos')
 %     
-%         subplot(3,1,3)
+%     subplot(3,1,3)
 %     plot(dat(:,1),dat(:,3)); hold on
-%     plot(dat(mov,1),dat(mov,3),'.'); hold off;
+%     plot(dat(movIdx{j},1),dat(movIdx{j},3),'.'); hold off;
 %     ylabel('jaw z position')
 %     xlabel('time')
 %     sgtitle(['Trial ' num2str(j)])
-%     pause
-
+% %     pause    
+     
+    
 end
 
 end % getMoveidx

@@ -8,8 +8,7 @@ end
 addAllPaths(pth);
 
 %% TODO
-%  fix bug in optimization when you change literally anything
-%  move onset
+%  form null and potent spaces out of movement and nonmovement indices
 %  handle multiple probes of data
 %  handle more than 2 conditions
 % OTHER METHODS:
@@ -24,11 +23,11 @@ addAllPaths(pth);
 
 params.doPSTH              = true; % get psths by condition and save meta data from above
 
-params.evName              = 'goCue'; % event to align data to
+params.alignEvent          = 'moveOnset'; %'goCue'
 params.sav                 = 0;    % save obj with psths (just need to do this once)
 
-params.method.optimization = true;   % elsayed method
-params.method.maxdiff      = false;  % new method mike and chand came up with
+params.method.optimization = false;   % elsayed method
+params.method.maxdiff      = true;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
 
 params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
@@ -111,7 +110,8 @@ end
 
 function addAllPaths(pth)
 addpath(genpath(fullfile(pth,'utils')))
-addpath(genpath(fullfile(pth,'preprocess')))
+addpath(genpath(fullfile(pth,'functions')))
+addpath(genpath(fullfile(pth,'plotting')))
 addpath(genpath(fullfile(pth,'optimization')))
 addpath(genpath(fullfile(pth,'regression')))
 addpath(genpath(fullfile(pth,'maxdiff_pca')))
