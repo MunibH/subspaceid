@@ -26,13 +26,13 @@ params.doPSTH              = true; % get psths by condition and save meta data f
 params.alignEvent          = 'moveOnset'; %'goCue'
 params.sav                 = 0;    % save obj with psths (just need to do this once)
 
-params.method.optimization = false;   % elsayed method
-params.method.maxdiff      = true;  % new method mike and chand came up with
+params.method.optimization = true;   % elsayed method
+params.method.maxdiff      = false;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
 
 params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
 
-params.varToExplain        = 90;    % sets dimensionality of null and potent space
+params.varToExplain        = 75;    % sets dimensionality of null and potent space
 
 % for 3D plot
 params.dims.potent         = [1,2]; % potent dims to plot by default
