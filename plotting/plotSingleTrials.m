@@ -33,7 +33,7 @@ end
 
 
 % plot
-nTrialsToPlot = 30; % per condition
+nTrialsToPlot = 20; % per condition
 smth = str2double(h.smooth.String);
 for i = 1:numel(condnum)
     trix = trials{condnum(i)};
