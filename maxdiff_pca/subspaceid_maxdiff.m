@@ -59,7 +59,6 @@ rez.Qpotent_ve = explained(1:rez.dMove);
 %% PLOTS
 cols = {[0,0,1],[1,0,0]};
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff');
-% plotStateSpace(obj.time, obj.psth, rez, cols, 'Optimization', params.dims);
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
 condLbl = {meta.condition{params.conditions}};
 plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff', params.dims, lbl, condLbl);
