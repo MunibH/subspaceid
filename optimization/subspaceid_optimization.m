@@ -35,7 +35,7 @@ rez = getVarianceExplained(rez);
 
 %% PLOTS
 
-cols = {[0,0,1],[1,0,0]};
+cols = params.cols;
 plotLatents(obj.time, obj.psth, rez, meta, cols, 'Optimization');
 lbl = {'Potent 1', 'Potent 2', 'Null 1'};
 condLbl = {meta.condition{params.conditions}};

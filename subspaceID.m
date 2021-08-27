@@ -5,7 +5,9 @@ if ispc
 elseif ismac
     pth = '/Users/Munib/Documents/Economo-Lab/code/subspaceid';
 end
-addAllPaths(pth);
+
+% addAllPaths(pth);
+addpath(genpath(pwd))
 
 %% TODO
 %  form null and potent spaces out of movement and nonmovement indices
@@ -29,6 +31,7 @@ params.sav                 = 0;    % save obj with psths (just need to do this o
 params.method.optimization = true;   % elsayed method
 params.method.maxdiff      = false;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
+params.method.psid         = false;
 
 params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
 
@@ -37,6 +40,9 @@ params.varToExplain        = 75;    % sets dimensionality of null and potent spa
 % for 3D plot
 params.dims.potent         = [1,2]; % potent dims to plot by default
 params.dims.null           = [1];   % null dims to plot by default
+
+params.cols = {[98, 189, 65], [255, 57, 90]};
+params.cols = cellfun(@(x) 1/255.*x, params.cols, 'UniformOutput',false);
 
 %% SET METADATA
 % experiment meta data
@@ -52,8 +58,8 @@ meta.tmax = 3;  % (s) relative to params.evName
 meta.dt = 0.005;
 
 meta.smooth = 200; % for params.doPSTH
-meta.prepEpoch = [-1.5, -0.15]; % (s) relative to go cue
-meta.moveEpoch = [0.15, 1.15]; % (s) relative to go cue
+meta.prepEpoch = [-1.5, -0.15]; % (s) relative to params.evName
+meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
 
 meta.smooth = 100; % for params.doPSTH
 meta.prepEpoch = [-2.2, -0.15]; % (s) relative to params.evName
@@ -115,6 +121,7 @@ addpath(genpath(fullfile(pth,'plotting')))
 addpath(genpath(fullfile(pth,'optimization')))
 addpath(genpath(fullfile(pth,'regression')))
 addpath(genpath(fullfile(pth,'maxdiff_pca')))
+addpath(genpath(fullfile(pth,'psid')))
 
 end % addAllPaths
 
@@ -136,6 +143,8 @@ switch method
         rez = subspaceid_regression(meta, obj, params);
     case 'maxdiff'
         rez = subspaceid_maxdiff(meta, obj, params);
+    case 'psid'
+        rez = subspaceid_psid(meta, obj, params);
 end
 end % subspaceIDWithMethod
 
