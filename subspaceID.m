@@ -13,6 +13,8 @@ addpath(genpath(pwd))
 %  form null and potent spaces out of movement and nonmovement indices
 %  handle multiple probes of data
 %  handle more than 2 conditions
+%  plotting functions for gpfa latents
+
 % OTHER METHODS:
 %  kaufman method (regression)
 %  dpca
@@ -23,15 +25,15 @@ addpath(genpath(pwd))
 
 %% SET RUN PARAMS
 
-params.doPSTH              = true; % get psths by condition and save meta data from above
-
-params.alignEvent          = 'moveOnset'; %'goCue'
-params.sav                 = 0;    % save obj with psths (just need to do this once)
-
 params.method.optimization = true;   % elsayed method
 params.method.maxdiff      = false;  % new method mike and chand came up with
 params.method.regression   = false;  % kaufman method
 params.method.psid         = false;
+
+params.singleTrialAnalysis = true;
+params.lowFR               = 5; % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
+
+params.alignEvent          = 'moveOnset'; %'goCue'
 
 params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
 
@@ -88,16 +90,16 @@ cluQuality = {obj.clu{meta.probe}(:).quality}';
 meta.cluNum = findClusters(cluQuality, meta.quality);
 
 % get list of trials
-obj.condition = meta.condition';
+obj.condition = meta.condition(params.conditions)';
 meta.trialNum = findTrials(obj, obj.condition);
 
-%% PSTHs
-if params.doPSTH
-    [obj, meta] = getPsthByCond(meta,obj,params);
-%     if params.sav
-%         save(fullfile(meta.datapth, meta.datafn), 'obj', '-v7.3');
-%     end
+%% PSTHs and GPFA Latents 
+[obj, meta] = getPsthByCond(meta,obj,params);
 
+%% GPFA Latents for single trial analysis
+if params.singleTrialAnalysis
+    [obj,meta] = removeLowFRClusters(obj,meta,params);
+    obj.gpfalatents = getGPFALatents(obj,meta,params);
 end
 
 %% ANALYSIS METHODS
