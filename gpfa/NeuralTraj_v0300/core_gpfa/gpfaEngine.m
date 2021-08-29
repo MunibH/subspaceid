@@ -1,4 +1,4 @@
-function gpfaEngine(seqTrain, seqTest, fname, varargin)
+function result = gpfaEngine(seqTrain, seqTest, fname, saverun, varargin)
 %  
 % gpfaEngine(seqTrain, seqTest, fname, ...) 
 %
@@ -104,4 +104,16 @@ function gpfaEngine(seqTrain, seqTest, fname, varargin)
   if ~parallelize
       fprintf('Saving %s...\n', fname);
   end
-  save(fname, vars{~ismember(vars, {'yAll', 'blah'})}, '-v7.3');
+  
+  if saverun
+      save(fname, vars{~ismember(vars, {'yAll', 'blah'})}, '-v7.3');
+  else
+      fieldnames = {vars{~ismember(vars, {'yAll', 'blah'})}};
+      for i = 1:numel(fieldnames)
+          curfn = fieldnames{i};
+          result.(curfn) = eval(curfn);
+      end
+  end
+  
+  
+  end

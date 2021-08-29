@@ -1,4 +1,4 @@
-function result = callDimRedEngine(fname,seqTrain,seqTest,varargin)
+function result = callDimRedEngine(fname,seqTrain,seqTest,saverun,varargin)
 %
 % result = callDimRedEngine(fname,seqTrain,seqTest, ...)
 %
@@ -65,18 +65,37 @@ if isequal(method, 'tdgpfa')
     tdgpfaEngine(seqTrain, seqTest, fname,...
         'xDim', xDim, 'binWidth', binWidth, extraOpts{:});
 elseif isequal(method,'gpfa')
-    gpfaEngine(seqTrain, seqTest, fname,...
+    result = gpfaEngine(seqTrain, seqTest, fname, saverun,...
         'xDim', xDim, 'binWidth', binWidth, extraOpts{:});
 elseif ismember(method, {'fa', 'ppca', 'pca'})
     twoStageEngine(seqTrain, seqTest, fname,...
         'typ', method, 'xDim', xDim, 'binWidth', binWidth, extraOpts{:});
 end
 
-if exist([fname '.mat'], 'file')
+if exist([fname '.mat'], 'file') && saverun
     save(fname, 'method', 'cvf', 'hasSpikesBool', '-append');
+else
+    fieldnames = {'method', 'cvf', 'hasSpikesBool'};
+    for i = 1:numel(fieldnames)
+        curfn = fieldnames{i};
+        result.(curfn) = eval(curfn);
+    end
 end
 
-result = [];
-if (nargout == 1) && (numFolds == 0) && exist([fname '.mat'], 'file')
+if saverun
+    result = [];
+end
+wsvars = who;
+numFoldsIsVar = false;
+for i = 1:numel(wsvars)
+    if strcmpi(wsvars{i},'numFolds')
+        numFoldsIsVar = true;
+        break
+    end
+end
+if ~numFoldsIsVar
+    numFolds = 0;
+end
+if (nargout == 1) && (numFolds == 0) && exist([fname '.mat'], 'file') && saverun
     result = load(fname);
 end

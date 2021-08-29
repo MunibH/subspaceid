@@ -1,19 +1,24 @@
 function latents = getGPFALatents(obj,meta,params)
 
 dat = formatDat(obj);
+dat = preprocessDat(dat,obj,meta.trialNum);
 
 % GPFA
 resultsPth = 'C:\Code\subspace-id\gpfa\mat_results\';
 runIdx = getNextRunIdx(resultsPth); 
 method = 'gpfa';
-xDim = 4; 
+xDim = 8; 
 kernSD = 30; % 30 (default) - for two-stage methods
 segLength = 20; % 20 (default) - didn't notice differences in changing this
 binWidth = 20; % 20 (default) - differences in changing this param depends on dt
-result = neuralTraj(runIdx, dat(1:40), 'datFormat', 'seq',...
+parallelize = false; % have to fix saving stuff in neuralTraj if true
+numFolds = 0;
+
+result = neuralTraj(runIdx, dat, 'datFormat', 'seq',...
                     'method', method, 'xDim', xDim,... 
                     'kernSDList', kernSD, 'segLength', segLength,...
-                    'binWidth', binWidth);
+                    'binWidth', binWidth,'parallelize',parallelize, ...
+                    'numFolds', numFolds);
 
 [~, seqTrain] = postprocess(result);
 
@@ -41,15 +46,15 @@ end % getGPFALatents
 
 function dat = formatDat(obj)
 % format data for gpfa
-% if datFormat is 'seq', nth entry has fields
+% nth entry has fields
 %                       trialId      -- unique trial identifier  
 %                       T (1 x 1)    -- number of timesteps
 %                       y (yDim x T) -- continuous valued data 
 %                                       (Eg: binned spike counts)
-for i = 1:size(obj.trialcounts,3)
+for i = 1:size(obj.trialpsth,3)
     dat(i).trialId = obj.trialId(i);
     dat(i).T       = numel(obj.time);
-    dat(i).y = obj.trialcounts(:,:,i)';
+    dat(i).y = obj.trialpsth(:,:,i)';
 end
 end % formatDat
 
@@ -71,6 +76,49 @@ function runIdx = getNextRunIdx(resultsPth)
     runIdx = runIdx + 1;
 end % getNextRunIdx
 
+function dat = preprocessDat(dat,obj,trials)
+% Square-root-transform spike counts to stabilize 
+% the variances (Yu et al., 2009). 
+
+for i = 1:numel(dat)
+    dat(i).y = sqrt(dat(i).y);
+end
+
+% Subtract the average across trials for each condition and time bin. 
+% This procedure removes systematic contributions by the stimulus, and thus, 
+% the model explains only the trial-to-trial variability
+means = nan(size(obj.trialpsth,1),size(obj.trialpsth,2),numel(trials));
+for i = 1:numel(trials) % each condition
+    % find trial indices
+    trix = ismember(obj.trialId,trials{i});
+    % get means across these trials
+    means(:,:,i) = mean(obj.trialpsth(:,:,trix),3);
+end
+
+for i = 1:numel(dat)
+    for j = 1:numel(trials)
+        if ismember(dat(i).trialId,trials{j})
+            cond = j;
+            break
+        end
+    end
+    dat(i).y = dat(i).y - squeeze(means(:,:,cond))';
+end
+
+% Note that in this case both the network state x and the 
+% observed (transformed) spike counts y have zero mean (over trials) in each bin
+% CHECK:
+% ntrials = numel(dat);
+% ix = 300;
+% clu = 1;
+% rsum = 0;
+% for i = 1:ntrials
+%     rsum = rsum + dat(i).y(clu,ix); 
+% end
+% checkmean = rsum / ntrials
+
+
+end % preprocessDat
 
 
 

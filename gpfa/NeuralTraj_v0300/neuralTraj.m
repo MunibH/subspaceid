@@ -52,6 +52,8 @@ function result = neuralTraj(runIdx, dat, varargin)
 %               parallelize each fold and latent dimensionality using
 %               multiple cores. Number of workers = numFolds * length of
 %               xDims (default: false)
+% saverun     - logical that when true, saves results from callDimRedEngine
+%               (default: false)
 %
 % 2015 Karthik Lakshmanan     karthikl@cs.cmu.edu
 
@@ -62,6 +64,7 @@ numFolds             = 0;
 xDims                = [3];
 kernSDList           = 20:5:80; % in msec
 parallelize          = false;
+saverun              = false;
 extraOpts            = assignopts(who, varargin);
 
 fprintf('\n---------------------------------------\n');
@@ -91,7 +94,7 @@ if isempty(seq)
     return;
 end
 
-N    = length(seq);
+N    = length(seq); % num trials
 fdiv = floor(linspace(1, N+1, numFolds+1));
 cvf_list = 0:numFolds;
 i = 1;
@@ -187,10 +190,10 @@ if (parallelize)
     end
     parfor i = 1:length(cvf_params)
         callDimRedEngine(cvf_params(i).fname, cvf_params(i).seqTrain, ...
-            cvf_params(i).seqTest, 'method', method, ...
+            cvf_params(i).seqTest, saverun, 'method', method, ...
             'xDim', cvf_params(i).xDim, 'cvf', cvf_params(i).cvf, ...
             'kernSDList', kernSDList, 'parallelize', parallelize, ...
-            'hasSpikesBool', cvf_params(i).hasSpikesBool, extraOpts{:});                
+            'hasSpikesBool', cvf_params(i).hasSpikesBool, extraOpts{:});
     end
 else
     for i = 1:length(cvf_params)
@@ -200,15 +203,21 @@ else
             fprintf('\n===== Cross-validation fold %d of %d =====\n', ...
                 cvf_params(i).cvf, numFolds);
         end
-        callDimRedEngine(cvf_params(i).fname, cvf_params(i).seqTrain, ...
-            cvf_params(i).seqTest, 'method', method, ...
+        result = callDimRedEngine(cvf_params(i).fname, cvf_params(i).seqTrain, ...
+            cvf_params(i).seqTest, saverun, 'method', method, ...
             'xDim', cvf_params(i).xDim, 'cvf', cvf_params(i).cvf, ...
             'kernSDList', kernSDList, 'parallelize', parallelize, ...
-            'hasSpikesBool', cvf_params(i).hasSpikesBool, extraOpts{:});        
+            'hasSpikesBool', cvf_params(i).hasSpikesBool, extraOpts{:});
     end
 end
 
-result = [];
-if (nargout == 1) && (numFolds == 0) && exist([cvf_params(1).fname '.mat'], 'file')
+if saverun
+    result = [];
+end
+if (nargout == 1) && (numFolds == 0) && exist([cvf_params(1).fname '.mat'], 'file') && saverun
     result = load(cvf_params(1).fname);
 end
+
+
+
+

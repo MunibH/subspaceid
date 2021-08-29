@@ -25,15 +25,16 @@ addpath(genpath(pwd))
 
 %% SET RUN PARAMS
 
-params.method.optimization = true;   % elsayed method
-params.method.maxdiff      = false;  % new method mike and chand came up with
-params.method.regression   = false;  % kaufman method
-params.method.psid         = false;
+params.method.optimization   = false;   % elsayed method
+params.method.maxdiff        = false;   % new method mike and chand came up with
+params.method.regression     = false;   % kaufman method (not working yet)
+params.method.psid           = false;   % pref subspace identification (not working yet)
+params.method.activity_modes = true;    % in progress
 
-params.singleTrialAnalysis = true;
-params.lowFR               = 5; % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
+params.singleTrialAnalysis = false;    % reduces dimensionality using gpfa
+params.lowFR               = 5;       % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
 
-params.alignEvent          = 'moveOnset'; %'goCue'
+params.alignEvent          = 'goCue'; % 'goCue' or 'moveOnset'
 
 params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
 
@@ -59,21 +60,26 @@ meta.tmin = -2.2; % (s) relative to params.evName
 meta.tmax = 3;  % (s) relative to params.evName
 meta.dt = 0.005;
 
-meta.smooth = 200; % for params.doPSTH
-meta.prepEpoch = [-1.5, -0.15]; % (s) relative to params.evName
-meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
-
-meta.smooth = 100; % for params.doPSTH
+meta.smooth = 100; % for psth
 meta.prepEpoch = [-2.2, -0.15]; % (s) relative to params.evName
 meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
 
 % conditions (i.e. trials to look at)
-meta.condition(1) = {'R&hit&~stim.enable&autowater.nums==2'}; % right hits, no stim, aw off
-meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
-meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
-meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
-% meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
-% meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+if contains(meta.anm,'JEB')
+    meta.condition(1) = {'R&hit&~stim.enable&autowater.nums==2'}; % right hits, no stim, aw off
+    meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
+    meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
+    meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
+    meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
+    meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+else
+    meta.condition(1) = {'R&hit&~stim.enable&~autowater'}; % right hits, no stim, aw off
+    meta.condition(2) = {'L&hit&~stim.enable&~autowater'}; % left hits, no stim, aw off
+    meta.condition(3) = {'R&hit&~stim.enable&~autowater'}; % right hits, no stim, aw on
+    meta.condition(4) = {'L&hit&~stim.enable&~autowater'}; % left hits, no stim, aw on
+    meta.condition(5) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw off
+    meta.condition(6) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw on
+end
 
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
