@@ -1,4 +1,4 @@
-function [movIdx,movTime] = getMoveIdx(obj)
+function [movix,movtime] = getMoveIdx(obj,params)
 % returns cell array mov where each entry is an (Nframesx1) logical vector
 % labeling where in a trial the animal is moving
 
@@ -17,8 +17,11 @@ sm = 7; % smoothing window
 
 
 vid = obj.traj{view};
-movIdx = cell(obj.bp.Ntrials,1);
-movTime = movIdx;
+movIdx = cell(obj.bp.Ntrials,1); % corersponds to idx of traj time
+movtime = movIdx; % corresponds to time in obj.time
+movix = movtime; % corresponds to idx in obj.time
+nonmovix = movix;
+nonmovtime = movtime;
 for j = 1:obj.bp.Ntrials
     %% get tongue trajectory
     
@@ -103,8 +106,8 @@ for j = 1:obj.bp.Ntrials
     %% get mov
     
     movIdx{j} = tongmov | jawspeedmov | jawzmov;
-    movTime{j} = dat(movIdx{j},1);
-    
+    movtime{j} = dat(movIdx{j},1);
+   
     %% plot
 %     close all
 %     figure('units','normalized','Position',[0.2 0.1 0.7 0.8]); 
@@ -128,9 +131,23 @@ for j = 1:obj.bp.Ntrials
 %     xlabel('time')
 %     sgtitle(['Trial ' num2str(j)])
 % %     pause    
-     
+
+    %% align to same event as neural data and only keep what's in obj.time
+    
+    movtime{j} = movtime{j} - obj.bp.ev.(params.alignEvent)(j);
+    movtime{j} = movtime{j}((movtime{j}>=min(obj.time) & movtime{j}<=max(obj.time)));
+        
+    %% movIdx is then the idx in obj.time where value of obj.time is closest to movTime
+    movix{j} = nan(size(movtime{j}));
+    for i = 1:numel(movtime{j})
+        mtime = movtime{j}(i);
+        [~,movix{j}(i)] = min(abs(obj.time - mtime));
+    end
+    movix{j} = unique(movix{j});
     
 end
+
+
 
 end % getMoveidx
 
