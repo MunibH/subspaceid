@@ -26,13 +26,15 @@ addpath(genpath(pwd))
 %% SET RUN PARAMS
 
 params.method.optimization   = false;   % elsayed method
-params.method.maxdiff        = false;   % new method mike and chand came up with
+params.method.maxdiff        = true;   % new method mike and chand came up with
 params.method.regression     = false;   % kaufman method (not working yet)
 params.method.psid           = false;   % pref subspace identification (not working yet)
-params.method.activity_modes = true;    % in progress
+params.method.activity_modes = false;   % in progress
 
-params.singleTrialAnalysis = false;    % reduces dimensionality using gpfa
-params.lowFR               = 5;       % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
+params.singleTrialAnalysis = true;     % reduces dimensionality using params.singleTrialMethod
+params.singleTrialMethod   = 'fa';     % 'fa' or 'pca' or 'gpfa'
+params.xDim                = 6;       % number of latent dims
+params.lowFR               = 0.5;      % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
 
 params.alignEvent          = 'goCue'; % 'goCue' or 'moveOnset'
 
@@ -60,7 +62,7 @@ meta.tmin = -2.2; % (s) relative to params.evName
 meta.tmax = 3;  % (s) relative to params.evName
 meta.dt = 0.005;
 
-meta.smooth = 100; % for psth
+meta.smooth = 15; % for psth
 meta.prepEpoch = [-2.2, -0.15]; % (s) relative to params.evName
 meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
 
@@ -70,8 +72,9 @@ if contains(meta.anm,'JEB')
     meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
     meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
     meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
-    meta.condition(5) = {'hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
-    meta.condition(6) = {'hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+%     meta.condition(5) = {'~hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
+%     meta.condition(6) = {'~hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+
 else
     meta.condition(1) = {'R&hit&~stim.enable&~autowater'}; % right hits, no stim, aw off
     meta.condition(2) = {'L&hit&~stim.enable&~autowater'}; % left hits, no stim, aw off
@@ -80,6 +83,7 @@ else
     meta.condition(5) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw off
     meta.condition(6) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw on
 end
+
 
 % clusters (these qualities are included)
 meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
@@ -96,17 +100,24 @@ cluQuality = {obj.clu{meta.probe}(:).quality}';
 meta.cluNum = findClusters(cluQuality, meta.quality);
 
 % get list of trials
-obj.condition = meta.condition(params.conditions)';
+obj.condition = meta.condition;
 meta.trialNum = findTrials(obj, obj.condition);
 
-%% PSTHs and GPFA Latents 
-[obj, meta] = getPsthByCond(meta,obj,params);
+%% align spikes
+obj = alignSpikes(obj,meta,params);
 
-%% GPFA Latents for single trial analysis
+%% PSTHs
+[obj, meta] = getPsth(meta,obj);
+[obj, meta] = getTrialPsth(meta,obj);
+[obj, meta] = removeLowFRClusters(obj,meta,params);
+
+%% Latent trajectories for single trial analysis
 if params.singleTrialAnalysis
-    [obj,meta] = removeLowFRClusters(obj,meta,params);
-    obj.gpfalatents = getGPFALatents(obj,meta,params);
+    obj.trial_latents = getSingleTrialLatents(obj,meta,params);
 end
+
+%% label move or non-move
+[meta.movix,meta.movtime] = getMoveIdx(obj,params);
 
 %% ANALYSIS METHODS
 methods = fieldnames(params.method);
@@ -121,17 +132,6 @@ end
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function addAllPaths(pth)
-addpath(genpath(fullfile(pth,'utils')))
-addpath(genpath(fullfile(pth,'functions')))
-addpath(genpath(fullfile(pth,'plotting')))
-addpath(genpath(fullfile(pth,'optimization')))
-addpath(genpath(fullfile(pth,'regression')))
-addpath(genpath(fullfile(pth,'maxdiff_pca')))
-addpath(genpath(fullfile(pth,'psid')))
-
-end % addAllPaths
 
 function fn = findDataFn(meta)
 contents = dir(meta.datapth);
@@ -150,7 +150,11 @@ switch method
     case 'regression'
         rez = subspaceid_regression(meta, obj, params);
     case 'maxdiff'
-        rez = subspaceid_maxdiff(meta, obj, params);
+        if params.singleTrialAnalysis
+            rez = subspaceid_maxdiff_singletrials(meta,obj,params);
+        else
+            rez = subspaceid_maxdiff(meta, obj, params);
+        end
     case 'psid'
         rez = subspaceid_psid(meta, obj, params);
 end
