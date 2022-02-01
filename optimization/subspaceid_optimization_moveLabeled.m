@@ -1,4 +1,4 @@
-function rez = subspaceid_optimization(obj, params)
+function rez = subspaceid_optimization_moveLabeled(obj, params)
 
 %% PREPROCESS
 rez.psth = obj.psth(:,:,params.condToUse);
@@ -7,10 +7,6 @@ rez.condition = params.condition(params.condToUse);
 rez.trialid = params.trialid(params.condToUse);
 
 rez = preprocess_optimization(rez); % softnorma and mean center across conditions
-
-%% PREP and MOVE EPOCHS
-% prepix and moveix corresponds to time idx for each epoch
-[rez.prepix, rez.moveix] = getEpochs(rez.time, params.prepEpoch, params.moveEpoch);
 
 %% GET COVARIANCE MATRICES of EPOCHS
 rez = epochCovariance(rez);

@@ -1,12 +1,5 @@
 clear,clc,close all
 
-if ispc
-    pth = 'C:\Code\subspace-id';
-elseif ismac
-    pth = '/Users/Munib/Documents/Economo-Lab/code/subspaceid';
-end
-
-% addAllPaths(pth);
 addpath(genpath(pwd))
 
 %% TODO
@@ -25,99 +18,61 @@ addpath(genpath(pwd))
 
 %% SET RUN PARAMS
 
-params.method.optimization   = false;   % elsayed method
-params.method.maxdiff        = true;   % new method mike and chand came up with
-params.method.regression     = false;   % kaufman method (not working yet)
-params.method.psid           = false;   % pref subspace identification (not working yet)
-params.method.activity_modes = false;   % in progress
+params.method.optimization               = false;   % elsayed method
+params.method.optimization_moveLabeled   = false;   % elsayed method, but null and potent are restricted to temporal epochs (TODO)
+params.method.maxdiff                    = true;   % new method
+% params.method.regression     = false;   % kaufman method (not working yet)
+% params.method.psid           = false;   % pref subspace identification (not working yet)
 
-params.singleTrialAnalysis = true;     % reduces dimensionality using params.singleTrialMethod
-params.singleTrialMethod   = 'fa';     % 'fa' or 'pca' or 'gpfa'
+
 params.xDim                = 6;       % number of latent dims
-params.lowFR               = 0.5;      % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
+params.varToExplain        = 75;    % sets dimensionality of null and potent space
 
 params.alignEvent          = 'goCue'; % 'goCue' or 'moveOnset'
 
-params.conditions          = [1 , 2]; % which conditions to use in analysis (only 2 rn)
+% conditions/trial types to PSTHs by
+params.condition(1)         = {'R&hit&~autowater'};    % right hits, no stim, aw off
+params.condition(end+1)     = {'L&hit&~autowater'};    % left hits, no stim, aw off
+params.condition(end+1)     = {'R&hit&autowater'};    
+params.condition(end+1)     = {'L&hit&autowater'};    
+params.condition(end+1)     = {'hit|miss|no'};    
 
-params.varToExplain        = 75;    % sets dimensionality of null and potent space
+
+params.condToUse = [1 2];
 
 % for 3D plot
 params.dims.potent         = [1,2]; % potent dims to plot by default
 params.dims.null           = [1];   % null dims to plot by default
 
-params.cols = {[98, 189, 65], [255, 57, 90]};
-params.cols = cellfun(@(x) 1/255.*x, params.cols, 'UniformOutput',false);
+params.lowFR               = 0;      % when doing single trial analysis, remove clusters with avg firing rate < params.lowFR
 
-%% SET METADATA
-% experiment meta data
-meta.datapth = fullfile(pth,'data');
-meta.anm = 'JEB7';
-meta.date = '2021-04-29';
-meta.datafn = findDataFn(meta);
-meta.probe = 1;
+params.cols = getColors();
 
-% analysis meta data
-meta.tmin = -2.2; % (s) relative to params.evName
-meta.tmax = 3;  % (s) relative to params.evName
-meta.dt = 0.005;
+params.probe = 2;
+params.probeArea = 'ALM';
 
-meta.smooth = 15; % for psth
-meta.prepEpoch = [-2.2, -0.15]; % (s) relative to params.evName
-meta.moveEpoch = [0.15, 1.15]; % (s) relative to params.evName
+params.tmin = -2.5;
+params.tmax = 1.5;
+params.dt = 1/400;
 
-% conditions (i.e. trials to look at)
-if contains(meta.anm,'JEB')
-    meta.condition(1) = {'R&hit&~stim.enable&autowater.nums==2'}; % right hits, no stim, aw off
-    meta.condition(2) = {'L&hit&~stim.enable&autowater.nums==2'}; % left hits, no stim, aw off
-    meta.condition(3) = {'R&hit&~stim.enable&autowater.nums==1'}; % right hits, no stim, aw on
-    meta.condition(4) = {'L&hit&~stim.enable&autowater.nums==1'}; % left hits, no stim, aw on
-%     meta.condition(5) = {'~hit&~stim.enable&autowater.nums==2'};   % hits, no stim, aw off
-%     meta.condition(6) = {'~hit&~stim.enable&autowater.nums==1'};   % hits, no stim, aw on
+params.smooth = 41;
 
-else
-    meta.condition(1) = {'R&hit&~stim.enable&~autowater'}; % right hits, no stim, aw off
-    meta.condition(2) = {'L&hit&~stim.enable&~autowater'}; % left hits, no stim, aw off
-    meta.condition(3) = {'R&hit&~stim.enable&~autowater'}; % right hits, no stim, aw on
-    meta.condition(4) = {'L&hit&~stim.enable&~autowater'}; % left hits, no stim, aw on
-    meta.condition(5) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw off
-    meta.condition(6) = {'hit&~stim.enable&~autowater'};   % hits, no stim, aw on
-end
+params.quality = {'all'};
 
-
-% clusters (these qualities are included)
-meta.quality = {'Fair','Good','Great','Excellent','single','multi'}; 
-
+% for elsayed optimization method
+% define time regions in trial that are considered prep and move times
+params.prepEpoch = [-(abs(params.tmin)), -0.05]; % (s) relative to alignEvent
+params.moveEpoch = [0.05, abs(params.tmax)]; % (s) relative to alignEvent
 
 %% LOAD DATA
-dat = load(fullfile(meta.datapth, meta.datafn));
-obj = dat.obj;
 
-%% get trials and clusters to use
+meta.datapth = '/Volumes/MUNIB_SSD/Experiments';
+meta.datafn  = 'data_structure_EKH3_2021-08-11';
 
-% get list of clusters
-cluQuality = {obj.clu{meta.probe}(:).quality}';
-meta.cluNum = findClusters(cluQuality, meta.quality);
-
-% get list of trials
-obj.condition = meta.condition;
-meta.trialNum = findTrials(obj, obj.condition);
-
-%% align spikes
-obj = alignSpikes(obj,meta,params);
-
-%% PSTHs
-[obj, meta] = getPsth(meta,obj);
-[obj, meta] = getTrialPsth(meta,obj);
-[obj, meta] = removeLowFRClusters(obj,meta,params);
-
-%% Latent trajectories for single trial analysis
-if params.singleTrialAnalysis
-    obj.trial_latents = getSingleTrialLatents(obj,meta,params);
-end
+[meta,params,obj] = loadAndProcessData(meta,params);
 
 %% label move or non-move
-[meta.movix,meta.movtime] = getMoveIdx(obj,params);
+[obj.movix,obj.movtime] = getMoveIdx(obj,params);
 
 %% ANALYSIS METHODS
 methods = fieldnames(params.method);
@@ -133,28 +88,17 @@ end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function fn = findDataFn(meta)
-contents = dir(meta.datapth);
-contents = {contents.name}';
-
-strToFind = {'data_structure' , meta.anm, meta.date};
-
-[fn,~] = patternMatchCellArray(contents, strToFind, 'all');
-
-end % loadRawDataObj
 
 function rez = subspaceIDWithMethod(meta, obj, method, params)
 switch method
     case 'optimization'
-        rez = subspaceid_optimization(meta, obj, params);
+        rez = subspaceid_optimization(obj, params);
+    case 'optimization_moveLabeled'
+        rez = subspaceid_optimization_moveLabeled(obj,params);
     case 'regression'
         rez = subspaceid_regression(meta, obj, params);
     case 'maxdiff'
-        if params.singleTrialAnalysis
-            rez = subspaceid_maxdiff_singletrials(meta,obj,params);
-        else
             rez = subspaceid_maxdiff(meta, obj, params);
-        end
     case 'psid'
         rez = subspaceid_psid(meta, obj, params);
 end

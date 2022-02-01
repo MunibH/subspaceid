@@ -9,10 +9,9 @@ fun = @(s)~cellfun('isempty',strfind(list,s));
 out = cellfun(fun,patterns,'UniformOutput',false);
 mask = all(horzcat(out{:}),2);
 elseif strcmpi(whichPatterns,'any')
-    mask = ismember(list, patterns);
+    mask = ismember(lower(list), lower(patterns));
 end
 
-list = list{mask};
+list = {list{mask}}';
 
 end
-
