@@ -1,24 +1,22 @@
 function rez = subspaceid_maxdiff(meta, obj, params)
 
 %% PREPROCESS
-obj.psth = obj.psth(:,:,params.conditions);
+rez.psth = obj.psth(:,:,params.condToUse);
 rez.time = obj.time;
-rez.psth = obj.psth;
-rez.trialpsth = obj.trialpsth;
-rez.condition = meta.condition(params.conditions);
+rez.condition = params.condition(params.condToUse);
+rez.trialid = params.trialid(params.condToUse);
 
-[obj, meta] = preprocess_maxdiff(meta, obj);
+rez = preprocess_maxdiff(rez);
 
 %% PREP and MOVE EPOCHS
 % prepix and moveix corresponds to time idx for each epoch
-[rez.prepix, rez.moveix] = getEpochs(obj.time, meta.prepEpoch, meta.moveEpoch);
+[rez.prepix, rez.moveix] = getEpochs(obj.time, params.prepEpoch, params.moveEpoch);
 
 %% METHOD 1 ( N*(I-WW') )
 
 %% FIND NULL MODES
-psth = obj.psth;
 
-preppsth = psth(rez.prepix,:,:);
+preppsth = rez.psth(rez.prepix,:,:);
 preppsth = [preppsth(:,:,1) ; preppsth(:,:,2)]; % (ct,n)
 
 % pca
@@ -32,9 +30,9 @@ rez.Qnull_ve = explained(1:rez.dPrep); % var explained of prep epoch in null sub
 %% PROJECT OUT PROMINENT NULL MODES
 modesToKeep = eye(size(pcs,1)) - (rez.Qnull*rez.Qnull');
 
-proj = nan(size(psth));
-for i = 1:size(psth,3)
-    proj(:,:,i) = psth(:,:,i) * modesToKeep;
+proj = nan(size(rez.psth));
+for i = 1:size(rez.psth,3)
+    proj(:,:,i) = rez.psth(:,:,i) * modesToKeep;
 end
 
 %% FIND POTENT MODES AS PCs OF MOVE EPOCH
@@ -50,7 +48,7 @@ rez.dMove = numComponentsToExplainVariance(explained, params.varToExplain);
 rez.Qpotent = pcs(:,1:rez.dMove);
 
 % variance explained of move epoch by potent space
-movepsth = psth(rez.moveix,:,:);
+movepsth = rez.psth(rez.moveix,:,:);
 movepsth = [movepsth(:,:,1) ; movepsth(:,:,2)]; % (ct,n)
 [~,lambdafull,~] = myPCA(movepsth);
 explained = (lambda / sum(lambdafull)) * 100;
@@ -58,13 +56,33 @@ rez.Qpotent_ve = explained(1:rez.dMove);
 
 %% PLOTS
 
-cols = params.cols;
-plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff');
-lbl = {'Potent 1', 'Potent 2', 'Null 1'};
-condLbl = {meta.condition{params.conditions}};
-plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff', params.dims, lbl, condLbl);
-cond = params.conditions;
-plotSingleTrialsGUI(obj.time,obj.trialpsth,rez,cols,'Maxdiff', params.dims,lbl,condLbl, meta.trialNum,cond);
+% cols = params.cols;
+% plotLatents(obj.time, obj.psth, rez, meta, cols, 'Maxdiff');
+% lbl = {'Potent 1', 'Potent 2', 'Null 1'};
+% condLbl = {meta.condition{params.conditions}};
+% plotStateSpaceGUI(obj.time, obj.psth, rez, cols, 'Maxdiff', params.dims, lbl, condLbl);
+% cond = params.conditions;
+% plotSingleTrialsGUI(obj.time,obj.trialpsth,rez,cols,'Maxdiff', params.dims,lbl,condLbl, meta.trialNum,cond);
+
+
+clrs = {[0 0 1],[1 0 0],[0.5 0.5 1],[1 0.5 0.5],'k'};
+
+Q = rez.Qnull;
+
+for i = 1:size(Q,2) % dimension
+    f = figure;
+    title(['Dim ' num2str(i) '   |   %VE: ' num2str(rez.Qnull_ve(i))]);
+    xlim([params.tmin, params.tmax]);
+    hold on
+    for j = 1:size(rez.psth,3) % condition
+        proj = rez.psth(:,:,j) * Q(:,i);
+        plot(obj.time, mySmooth(proj,100), 'Color', clrs{j}, ...
+            'LineWidth', 2.5);
+    end
+    hold off
+    ax = gca;
+    ax.FontSize = 20;
+end
 
 %% METHOD 2 ( for each cell, project onto each component, subtract from psth)
 

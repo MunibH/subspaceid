@@ -3,11 +3,17 @@ function [movix,movtime] = getMoveIdx(obj,params)
 % labeling where in a trial the animal is moving
 
 % algorithm:
-% First, set timepoint to true if tongue is visible
-% Then, set timepoint to true if jaw speed exceeds a threshold
-% Last, set timepoint true if variance in jaw position exceeds a threshold
+% 1) set timepoint to true if tongue is visible
+% 2) set timepoint to true if jaw speed exceeds a threshold
+% 3) set timepoint true if variance in jaw position exceeds a threshold
+
+% movIdx is 1) or 2) or 3) 
 
 %% params
+% 
+% figure(1)
+% set(gcf,'units','normalized','Position',[0.2 0.1 0.7 0.8]); 
+
 
 dt = 1/400;
 view = 1; % side cam
@@ -15,13 +21,14 @@ tongfeat = 1;
 jawfeat = 2; 
 sm = 7; % smoothing window
 
+jawSpeedPercent = 0.35; % defines jaw speed threshold above which is considered movement
+jawPosVarPercent = 0.05; % defines variance in jaw position thresh, above which is considered movement
+
+
 
 vid = obj.traj{view};
-movIdx = cell(obj.bp.Ntrials,1); % corersponds to idx of traj time
-movtime = movIdx; % corresponds to time in obj.time
-movix = movtime; % corresponds to idx in obj.time
-nonmovix = movix;
-nonmovtime = movtime;
+movIdx = cell(obj.bp.Ntrials,1);
+movTime = movIdx;
 for j = 1:obj.bp.Ntrials
     %% get tongue trajectory
     
@@ -46,7 +53,7 @@ for j = 1:obj.bp.Ntrials
     
     Nframes = size(vid(j).ts, 1);
     dat = zeros(Nframes, 2);
-    dat(:,1) = (1:Nframes)./(1/dt); % time
+    dat(:,1) = (1:Nframes) .* dt; % time
     dat(:,2) = mySmooth(vid(j).ts(:,1,jawfeat), sm); % x
     dat(:,3) = mySmooth(vid(j).ts(:,2,jawfeat), sm); % z
     dat(p<0.9,[2,3]) = NaN;
@@ -77,12 +84,12 @@ for j = 1:obj.bp.Ntrials
     dat(:,4) = mySmooth(abs(dat(:,4)),200);
     
     dat(:,4) = (dat(:,4) - nanmin(dat(:,4))) / (nanmax(dat(:,4)) - nanmin(dat(:,4)));
-    dat(:,4) = dat(:,4) - nanmean(dat(:,4));
+%     dat(:,4) = dat(:,4) - nanmean(dat(:,4));
     dat(1:50,4) = dat(51,4); 
 
     %% find where jaw speed exceeds a threshold
     
-    per1 = 0.025;
+    per1 = jawSpeedPercent;
     if min(dat(:,4)) < 0
         jawspeedthresh = per1*(max(dat(:,4)) + min(dat(:,4)));
     else
@@ -99,44 +106,21 @@ for j = 1:obj.bp.Ntrials
         val(ii) = nanvar(dat(ii-(1/dt*binsize-1):ii,3)); % variance in jaw z pos in bin
     end
     
-    per2 = 0.05;
+    per2 = jawPosVarPercent;
     jawzthresh = per2*max(val);
     jawzmov = val > jawzthresh;
     
     %% get mov
     
     movIdx{j} = tongmov | jawspeedmov | jawzmov;
-    movtime{j} = dat(movIdx{j},1);
-   
-    %% plot
-%     close all
-%     figure('units','normalized','Position',[0.2 0.1 0.7 0.8]); 
-%     subplot(3,1,1)
-%     plot(dat(:,1),dat(:,4)); hold on;
-%     plot(dat(jawspeedmov,1),dat(jawspeedmov,4),'.'); hold off
-%     yline(jawspeedthresh,'r');
-%     ylabel('jaw speed')
-%     
-%     subplot(3,1,2)
-%     title('variance in jaw z pos')
-%     plot(dat(:,1),val); hold on
-%     plot(dat(jawzmov,1),val(jawzmov),'.'); hold off
-%     yline(jawzthresh,'r');
-%     ylabel('variance in jaw z pos')
-%     
-%     subplot(3,1,3)
-%     plot(dat(:,1),dat(:,3)); hold on
-%     plot(dat(movIdx{j},1),dat(movIdx{j},3),'.'); hold off;
-%     ylabel('jaw z position')
-%     xlabel('time')
-%     sgtitle(['Trial ' num2str(j)])
-% %     pause    
+    movTime{j} = dat(movIdx{j},1);
 
-    %% align to same event as neural data and only keep what's in obj.time
+
+     %% align to same event as neural data and only keep what's in obj.time
     
-    movtime{j} = movtime{j} - obj.bp.ev.(params.alignEvent)(j);
+    movtime{j} = movTime{j} - obj.bp.ev.(params.alignEvent)(j);
     movtime{j} = movtime{j}((movtime{j}>=min(obj.time) & movtime{j}<=max(obj.time)));
-        
+    
     %% movIdx is then the idx in obj.time where value of obj.time is closest to movTime
     movix{j} = nan(size(movtime{j}));
     for i = 1:numel(movtime{j})
@@ -145,11 +129,50 @@ for j = 1:obj.bp.Ntrials
     end
     movix{j} = unique(movix{j});
     
+%     %% plot
+% % %     close all
+%     subplot(3,1,1)
+%     plot(dat(:,1),dat(:,4),'LineWidth',2.5); hold on;
+%     plot(dat(jawspeedmov,1),dat(jawspeedmov,4),'.','MarkerSize',1); hold off
+%     yline(jawspeedthresh,'r');
+%     ylabel('jaw speed')
+%     ax = gca;
+%     ax.FontSize = 20;
+%     
+%     subplot(3,1,2)
+%     title('variance in jaw z pos')
+%     plot(dat(:,1),val,'LineWidth',2.5); hold on
+%     plot(dat(jawzmov,1),val(jawzmov),'.','MarkerSize',1); hold off
+%     yline(jawzthresh,'r');
+%     ylabel('variance in jaw z pos')
+%     ax = gca;
+%     ax.FontSize = 20;
+%     
+%     subplot(3,1,3)
+%     plot(dat(:,1),dat(:,3),'LineWidth',2.5); hold on
+%     plot(dat(movIdx{j},1),dat(movIdx{j},3),'.','MarkerSize',1); hold off;
+%     ylabel('jaw z position')
+%     xlabel('time')
+%     sgtitle(['Trial ' num2str(j)])
+%     ax = gca;
+%     ax.FontSize = 20;
+%     
+%     pause    
+     
+    
 end
 
-
-
 end % getMoveidx
+
+
+
+
+
+
+
+
+
+
 
 
 

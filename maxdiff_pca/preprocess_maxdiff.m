@@ -1,14 +1,14 @@
-function [obj, meta] = preprocess_maxdiff(meta, obj)
+function rez = preprocess_maxdiff(rez)
 
 %% soft-normalize 
-meta.lambda = 0.01;
-psth = softnorm(obj.psth, meta.lambda);
+rez.softnorm_lambda = 0.01;
+psth = softnorm(rez.psth, rez.softnorm_lambda);
 
 %% mean-center
 psth = meancenter(psth);
 
 %% 
-obj.psth = psth;
+rez.psth = psth;
 
 end % preprocess_maxdiff
 
